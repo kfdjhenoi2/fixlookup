@@ -1675,14 +1675,10 @@ a.content-card:hover {
   background: var(--mint-pale);
 }
 
-.governance-contact a {
-  display: inline-block;
+.governance-contact .governance-contact-status {
   margin-bottom: 0.55rem;
   color: var(--green-deep);
-  font-family: var(--mono);
   font-weight: 760;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
 }
 
 @media (min-width: 36rem) {

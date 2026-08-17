@@ -346,7 +346,7 @@ export const sourceKnowledge: SourceKnowledge[] = [
   source("source-whirlpool-not-cleaning", "Whirlpool US", "https://www.whirlpool.com/blog/kitchen/dishwasher-not-cleaning.html"),
   source("source-whirlpool-not-drying", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Dishwasher/Drying_Performance/Not_Drying_-_Dishwasher"),
   source("source-whirlpool-dull-dishes", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Dishwasher/Wash_Performance/Other_Cookware_and_Dishes/Dull_Surfaces_on_Dishes"),
-  source("source-whirlpool-detergent-remains", "Whirlpool US", "https://producthelp.whirlpool.com/%40api/deki/pages/16729/pdf/Detergent%2BRemains%2Bat%2BEnd%2Bof%2BCycle%2B-%2BDishwasher.pdf"),
+  source("source-whirlpool-detergent-remains", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Dishwasher/Dispenser_Concerns/Dispenser_Concerns/Detergent_Remains_at_End_of_Cycle_-_Dishwasher"),
   source("source-whirlpool-f8e4", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Dishwasher/Leaking/Underneath_or_Behind/F8E4_-_Error_Code_-_Dishwasher"),
   source("source-samsung-water-codes", "Samsung UK", "https://www.samsung.com/uk/support/home-appliances/5c-5e-4c-4e-and-lc-le-information-codes-on-my-dishwasher/", "2021-09-23"),
 ];

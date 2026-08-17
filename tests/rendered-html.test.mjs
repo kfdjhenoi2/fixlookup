@@ -179,11 +179,14 @@ test("trust pages explain the editorial, safety, correction, and contact boundar
     ["/en/about/", [/About FixLookup/, /source-aware troubleshooting/]],
     ["/en/editorial-policy/", [/How FixLookup reviews and publishes technical information/, /What verified means/]],
     ["/en/safety/", [/Safe next steps come before complete instructions/, /Professional-only work/]],
-    ["/en/contact/", [/Help keep the record accurate/, /corrections@fixlookup\.com/, /must be activated and tested/]],
+    ["/en/contact/", [/Help keep the record accurate/, /Correction contact will be available soon/, /No correction inbox is currently available/]],
   ]);
   for (const [path, patterns] of expectations) {
     const html = await expectPage(path, [...patterns, /"@type":"WebPage"/]);
     assert.doesNotMatch(html, /name="robots" content="noindex/);
+    if (path === "/en/contact/") {
+      assert.doesNotMatch(html, /mailto:|corrections@fixlookup\.com/i);
+    }
   }
 });
 

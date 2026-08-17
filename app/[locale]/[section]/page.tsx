@@ -216,9 +216,9 @@ function GovernancePage({ locale, content, governance }: { locale: Locale; conte
           ))}
           {governance.id === "contact" ? (
             <section className="governance-section governance-contact">
-              <span className="eyebrow">{page.addressLabel}</span>
-              <a href={`mailto:${page.address}`}>{page.address}</a>
-              <p>{page.addressNote}</p>
+              <h2>{page.availabilityTitle}</h2>
+              <p className="governance-contact-status">{page.availabilityStatus}</p>
+              <p>{page.availabilityNote}</p>
             </section>
           ) : null}
         </div>

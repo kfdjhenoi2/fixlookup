@@ -39,7 +39,7 @@ Security headers are centralized in `lib/security.mjs` and applied through stand
 
 The public trust pages cover FixLookup's scope, editorial and sourcing policy, safety boundary, corrections, and contact structure. Verified guides and sources must include a valid `lastReviewed` date and positive review interval. The current default interval is 365 days; review-due dates are derived rather than invented separately.
 
-The launch corrections address is `corrections@fixlookup.com`. It must be activated and tested after the domain is connected and before the public correction channel is described as operational.
+No correction inbox is currently published. The public contact page uses neutral availability copy until a real correction channel is activated and tested.
 
 ## Quality checks
 
