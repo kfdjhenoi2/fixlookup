@@ -113,7 +113,17 @@ function CategoryPage({ locale, section, content }: { locale: typeof supportedLo
       <div className="site-shell">
         <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={paths.category(locale, category)} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: content.messages.ui.navDevices, href: paths.devices(locale) }, { label: category.name }]} />
         <header className="category-hero"><div><span className="eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><p>{page.intro}</p></div><div className="category-code" aria-hidden="true">DW / 01</div></header>
-        <SearchBox items={content.searchItems} locale={locale} messages={content.messages.ui} typeLabels={content.messages.searchTypeLabels} compact />
+        <SearchBox
+          items={content.searchItems}
+          locale={locale}
+          messages={content.messages.ui}
+          typeLabels={content.messages.searchTypeLabels}
+          compact
+          recoveryLinks={[
+            { href: `${paths.category(locale, category)}#manufacturers-heading`, label: content.messages.ui.searchBrowseManufacturers },
+            { href: `${paths.category(locale, category)}#symptoms-heading`, label: content.messages.ui.searchBrowseProblems },
+          ]}
+        />
         <section className="section-block" aria-labelledby="manufacturers-heading">
           <div className="section-heading"><div><span className="eyebrow">{page.manufacturerEyebrow}</span><h2 id="manufacturers-heading">{page.manufacturerTitle}</h2></div><span className="section-note">{formatMessage(page.indexCount, { count: manufacturers.length })}</span></div>
           <div className="manufacturer-grid">{manufacturers.map((manufacturer, index) => <Link href={paths.manufacturer(locale, category, manufacturer)} key={manufacturer.id}><span className="manufacturer-index">{String(index + 1).padStart(2, "0")}</span><strong>{manufacturer.name}</strong><span aria-hidden="true">→</span></Link>)}</div>

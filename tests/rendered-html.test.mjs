@@ -183,9 +183,20 @@ test("root and trailing-slash redirects normalize to one locale-aware URL", asyn
     /<html lang="en">/,
     /aria-label="FixLookup home"/,
     /<span>FixLookup<\/span>/,
-    /Find the right next step/,
-    /Search for a manufacturer, symptom, or error code/,
-    /href="\/en\/dishwashers\/bosch\/e15\/"/,
+    /Look up what(?:&#x27;|')s wrong with your appliance/,
+    /Search by exact model number, error code, or appliance symptom/,
+    /Model, error code, or problem/,
+    /Bosch E24/,
+    /Samsung 5E/,
+    /Siemens SN25M889EU\/55/,
+    /Dishwasher not draining/,
+    /Search by model/,
+    /Search by error code/,
+    /Search by symptom/,
+    /official manufacturer support pages and manuals/,
+    /href="\/en\/editorial-policy\/"/,
+    /Dishwashers are the only published appliance category for now/,
+    /href="\/en\/dishwashers\/"/,
   ]);
   assert.doesNotMatch(home, /href="\/(?:devices|dishwashers)(?:\/|")/);
 
@@ -210,7 +221,7 @@ test("robots allows crawling and advertises one canonical sitemap", async () => 
 });
 
 test("server-rendered pages do not include Google Analytics before browser consent", async () => {
-  const html = await expectPage("/en/", [/Optional analytics|Find the right next step/]);
+  const html = await expectPage("/en/", [/Optional analytics|Look up what/]);
   assert.doesNotMatch(html, /googletagmanager\.com\/gtag\/js|_next-ga-init|fixlookup-ga-privacy-bootstrap/);
 });
 

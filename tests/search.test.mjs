@@ -19,6 +19,7 @@ const item = (overrides) => ({
 
 const records = [
   item({ id: "bosch-e15", label: "Bosch E15", manufacturer: "Bosch", identifiers: ["E15"], href: "/bosch/e15", titleTerms: ["E15 error code"] }),
+  item({ id: "bosch-e24", label: "Bosch E24", manufacturer: "Bosch", identifiers: ["E24"], aliases: ["E-24"], href: "/bosch/e24", titleTerms: ["E24 error code"] }),
   item({ id: "whirlpool-f8e4", label: "Whirlpool F8E4", manufacturer: "Whirlpool", identifiers: ["F8E4"], aliases: ["F8 E4"], href: "/whirlpool/f8e4" }),
   item({ id: "electrolux-i20", label: "Electrolux i20", manufacturer: "Electrolux", identifiers: ["i20"], aliases: ["C2", "F2", "AL6"], href: "/electrolux/i20" }),
   item({ id: "samsung-1e", label: "Samsung 1E", manufacturer: "Samsung", identifiers: ["1E"], href: "/samsung/1e" }),
@@ -27,6 +28,7 @@ const records = [
   item({ id: "model-scoped-e15", label: "Example E15", manufacturer: "Example", identifiers: ["E15"], aliases: ["E17"], applicabilityIdentifiers: ["SHPM88Z75N"], verifiedApplicabilityCombinations: ["SHPM88Z75N E15"], href: "/example/e15" }),
   item({ id: "unscoped-e15", label: "Other E15", manufacturer: "Other", identifiers: ["E15"], href: "/other/e15" }),
   item({ id: "exact-model", type: "model", label: "Bosch SHPM88Z75N", manufacturer: "Bosch", identifiers: ["SHPM88Z75N"], href: "/bosch/models/shpm88z75n" }),
+  item({ id: "siemens-exact-model", type: "model", label: "Siemens", description: "SN25M889EU/55", manufacturer: "Siemens", identifiers: ["SN25M889EU/55", "SN25M889EU55"], href: "/siemens/models/sn25m889eu-55" }),
   item({ id: "samsung-exact-model", type: "model", label: "Samsung DW60A6090BB/EF", manufacturer: "Samsung", identifiers: ["DW60A6090BB/EF", "DW60A6090BBEF"], applicabilityIdentifiers: ["4C", "LC"], verifiedApplicabilityCombinations: ["DW60A6090BB/EF 4C", "DW60A6090BB/EF LC"], href: "/samsung/models/dw60a6090bb-ef" }),
   item({ id: "samsung-exact-4c", label: "Samsung 4C", manufacturer: "Samsung", identifiers: ["4C"], aliases: ["4E"], applicabilityIdentifiers: ["DW60A6090BB/EF"], verifiedApplicabilityCombinations: ["DW60A6090BB/EF 4C"], href: "/samsung/4c" }),
   item({ id: "drain-problem", type: "problem", label: "Dishwasher not draining", titleTerms: ["standing water", "not draining"], descriptionTerms: ["water remains after a cycle"], href: "/problems/drain" }),
@@ -81,4 +83,12 @@ test("one signal record returns once even when it can have many interpretations"
 test("symptom terms match while unrelated text returns no result", () => {
   assert.equal(searchKnowledgeItems(records, "not draining")[0]?.id, "drain-problem");
   assert.deepEqual(searchKnowledgeItems(records, "refrigerator compressor"), []);
+});
+
+test("homepage examples resolve to useful canonical records", () => {
+  assert.equal(searchKnowledgeItems(records, "Bosch E24")[0]?.id, "bosch-e24");
+  assert.equal(searchKnowledgeItems(records, "Samsung 5E")[0]?.id, "samsung-5c");
+  assert.equal(searchKnowledgeItems(records, "Siemens SN25M889EU/55")[0]?.id, "siemens-exact-model");
+  assert.equal(searchKnowledgeItems(records, "Dishwasher not draining")[0]?.id, "drain-problem");
+  assert.deepEqual(searchKnowledgeItems(records, "zzq-no-such-dishwasher-999"), []);
 });

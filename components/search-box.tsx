@@ -16,6 +16,10 @@ export function SearchBox({
   typeLabels,
   compact = false,
   anchorId,
+  examples = [],
+  examplesAriaLabel,
+  examplesPrefix,
+  recoveryLinks = [],
 }: {
   items: SearchItem[];
   locale: Locale;
@@ -23,11 +27,16 @@ export function SearchBox({
   typeLabels: Record<SearchItem["type"], string>;
   compact?: boolean;
   anchorId?: string;
+  examples?: Array<{ label: string; query: string }>;
+  examplesAriaLabel?: string;
+  examplesPrefix?: string;
+  recoveryLinks?: Array<{ href: string; label: string }>;
 }) {
   const [query, setQuery] = useState("");
   const router = useRouter();
   const inputId = useId();
   const resultsId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const lastZeroResultQuery = useRef("");
   const normalizedQuery = query.trim().toLocaleLowerCase(locale);
   const results = useMemo(() => {
@@ -66,12 +75,18 @@ export function SearchBox({
     }
   }
 
+  function handleExample(queryValue: string) {
+    setQuery(queryValue);
+    window.requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
   return (
     <div className={`search-module ${compact ? "search-module-compact" : ""}`} id={anchorId}>
       <form className="search-form" role="search" onSubmit={handleSubmit}>
         <span className="search-symbol" aria-hidden="true" />
         <label className="sr-only" htmlFor={inputId}>{messages.searchLabel}</label>
         <input
+          ref={inputRef}
           id={inputId}
           type="search"
           autoComplete="off"
@@ -82,6 +97,16 @@ export function SearchBox({
         />
         <button type="submit" disabled={!results.length}>{messages.searchButton}</button>
       </form>
+      {examples.length ? (
+        <div className="search-examples" role="group" aria-label={examplesAriaLabel}>
+          {examplesPrefix ? <span className="search-examples-label">{examplesPrefix}</span> : null}
+          {examples.map((example) => (
+            <button type="button" key={example.query} onClick={() => handleExample(example.query)}>
+              {example.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
       {normalizedQuery ? (
         <div className="search-results" id={resultsId}>
           <p className="sr-only" aria-live="polite">
@@ -92,12 +117,14 @@ export function SearchBox({
               {results.map((result) => (
                 <li key={result.id}>
                   <Link href={result.href} onClick={() => trackSearch("result_click", result)}>
-                    <span className="result-copy">
-                      <strong>{result.label}</strong>
-                      <small>{result.description}</small>
-                    </span>
                     <span className="result-type">
                       {typeLabels[result.type]}
+                    </span>
+                    <span className="result-copy">
+                      {result.type === "model"
+                        ? <code className="result-model-identifier">{result.description}</code>
+                        : <strong>{result.label}</strong>}
+                      <small>{result.type === "model" ? result.label : result.description}</small>
                     </span>
                   </Link>
                 </li>
@@ -106,7 +133,17 @@ export function SearchBox({
           ) : (
             <div className="empty-search">
               <strong>{messages.noSearchMatch}</strong>
-              <span>{messages.searchSuggestion}</span>
+              <p>{messages.searchSuggestion}</p>
+              <ul>
+                <li>{messages.searchCheckModel}</li>
+                <li>{messages.searchTryCode}</li>
+                <li>{messages.searchDescribeSymptom}</li>
+              </ul>
+              {recoveryLinks.length ? (
+                <div className="empty-search-links">
+                  {recoveryLinks.map((link) => <Link href={link.href} key={link.href}>{link.label}</Link>)}
+                </div>
+              ) : null}
             </div>
           )}
         </div>

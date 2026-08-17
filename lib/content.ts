@@ -312,7 +312,7 @@ export function getContent(locale: Locale) {
       const manufacturer = required(getManufacturerById(model.manufacturerId), model.manufacturerId);
       const applicableIdentifiers = uniqueStrings(model.errorRelationships.flatMap((relationship) => relationship.verifiedIdentifiers));
       return category ? [{
-        id: `search-${model.id}`, label: model.name, description: model.modelNumber, type: "model" as const,
+        id: `search-${model.id}`, label: manufacturer.name, description: model.modelNumber, type: "model" as const,
         href: paths.model(locale, category, manufacturer, model), identifiers: [model.modelNumber, model.normalizedSearchIdentifier], aliases: model.officialAliases, manufacturer: manufacturer.name,
         titleTerms: [model.name, category.singularName], descriptionTerms: [messages.ui.searchKeywordModel], applicabilityIdentifiers: applicableIdentifiers,
         verifiedApplicabilityCombinations: model.errorRelationships.flatMap((relationship) =>
