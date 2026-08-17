@@ -66,6 +66,23 @@ const manufacturerPaths = [
   "/en/dishwashers/whirlpool/",
   "/en/dishwashers/samsung/",
   "/en/dishwashers/lg/",
+  "/en/dishwashers/ge/",
+  "/en/dishwashers/miele/",
+  "/en/dishwashers/beko/",
+];
+
+const modelPaths = [
+  "/en/dishwashers/bosch/models/shx78cm5n-01/",
+  "/en/dishwashers/siemens/models/sn25m889eu-55/",
+  "/en/dishwashers/siemens/models/sn25m244eu-b3/",
+  "/en/dishwashers/samsung/models/dw60dg760b00u1/",
+  "/en/dishwashers/samsung/models/dw60a6090bb-ef/",
+  "/en/dishwashers/samsung/models/dw60m5050fw-eu/",
+  "/en/dishwashers/lg/models/ldph7972s-assesna/",
+  "/en/dishwashers/ge/models/pdt715synfs/",
+  "/en/dishwashers/miele/models/g-5150-scvi-active/",
+  "/en/dishwashers/beko/models/bdin16n30s/",
+  "/en/dishwashers/beko/models/bdis38050q/",
 ];
 
 const governancePaths = [
@@ -82,6 +99,7 @@ const indexablePaths = [
   ...governancePaths,
   "/en/dishwashers/",
   ...manufacturerPaths,
+  ...modelPaths,
   ...problemPaths,
   ...errorCodePaths,
 ];
@@ -206,10 +224,42 @@ test("renders locale-aware category, manufacturer, and search links", async () =
   ]);
   assert.ok((category.match(/Source verified/g) ?? []).length >= 14);
 
-  await expectPage("/en/dishwashers/bosch/", [/Bosch(?:<!-- -->)? dishwashers/, /No verified models published yet/, /E15/, /E24/, /E12/, /E25/]);
+  await expectPage("/en/dishwashers/bosch/", [/Bosch(?:<!-- -->)? dishwashers/, /SHX78CM5N\/01/, /Evidence-checked relationship/, /United States/, /E15/, /E24/, /E12/, /E25/]);
   await expectPage("/en/dishwashers/electrolux/", [/Electrolux(?:<!-- -->)? dishwashers/, /i20/, /C2/, /i30/, /i40/, /iF0/]);
   await expectPage("/en/dishwashers/samsung/", [/4C \/ 4E/, /5C \/ 5E/, /LC \/ LE/, /OC \/ 0C \/ oE/]);
   await expectPage("/en/dishwashers/lg/", [/LG(?:<!-- -->)? dishwashers/, /AE \/ EI \/ FE \/ RE/, /IE water-inlet/, /OE water-outlet/]);
+  await expectPage("/en/dishwashers/ge/", [/GE Appliances(?:<!-- -->)? dishwashers/, /PDT715SYNFS/, /9 linked topics/]);
+  await expectPage("/en/dishwashers/miele/", [/Miele(?:<!-- -->)? dishwashers/, /G 5150 SCVi Active/, /United Kingdom/]);
+  await expectPage("/en/dishwashers/beko/", [/Beko(?:<!-- -->)? dishwashers/, /BDIN16N30S/, /BDIS38050Q/, /Germany/, /Slovakia/]);
+});
+
+test("exact-model pages expose only evidence-backed relationships and reusable guides", async () => {
+  for (const path of modelPaths) {
+    const html = await expectPage(path, [
+      /Exact dishwasher model record/,
+      /Official model documentation/,
+      /Evidence checked; not an endorsement/,
+      /Applicability boundary/,
+      /Safety boundary/,
+      /Sources &amp; references/,
+      /class="claim-sources"/,
+      /"@type":"Product"/,
+    ]);
+    assert.doesNotMatch(html, /Model family/);
+    assert.doesNotMatch(html, /name="robots" content="noindex/);
+  }
+
+  const bosch = await expectPage(modelPaths[0], [/SHX78CM5N\/01/, /No exact error-code relationships are verified/, /10 linked topics|Manual-supported problem topics/]);
+  assert.doesNotMatch(bosch, /href="\/en\/dishwashers\/bosch\/e15\/"/);
+
+  await expectPage(modelPaths[1], [/SN25M889EU\/55/, />E12</, />E14</, />E24 \/ E25</, /Ireland/]);
+  await expectPage(modelPaths[2], [/SN25M244EU\/B3/, />E15</, /9000911442_H\.pdf/]);
+  await expectPage(modelPaths[3], [/DW60DG760B00U1/, />4C</, />5C</, />LC</, /United Kingdom/]);
+  await expectPage(modelPaths[4], [/DW60A6090BB\/EF/, />4C</, />LC</]);
+  await expectPage(modelPaths[5], [/DW60M5050FW\/EU/, />4C</, />LC</, /Ireland/]);
+  await expectPage(modelPaths[6], [/LDPH7972S\.ASSESNA/, />AE \/ FE</, />IE</, />OE</]);
+  await expectPage(modelPaths[7], [/PDT715SYNFS/, /No exact error-code relationships are verified/]);
+  await expectPage(modelPaths[8], [/G 5150 SCVi Active/, /No exact error-code relationships are verified/]);
 });
 
 test("trust pages explain the editorial, safety, correction, and contact boundaries", async () => {
@@ -362,6 +412,17 @@ test("structured data stays tied to canonical pages and cited primary sources", 
     assert.ok(html.includes(`"url":"${expectedOrigin}${path}"`));
     assert.ok(html.includes(`"mainEntityOfPage":"${expectedOrigin}${path}"`));
   }
+
+
+  for (const path of modelPaths) {
+    const html = await expectPage(path, [
+      /"@type":"WebPage"/,
+      /"mainEntity":\{"@type":"Product"/,
+      /"brand":\{"@type":"Brand"/,
+      /"isBasedOn":\["https:\/\//,
+    ]);
+    assert.ok(html.includes(`"url":"${expectedOrigin}${path}"`));
+  }
 });
 
 test("sitemap contains exactly the real indexable English URLs", async () => {
@@ -376,7 +437,8 @@ test("sitemap contains exactly the real indexable English URLs", async () => {
   assert.equal(new Set(locations).size, locations.length, "sitemap URLs must be unique");
   assert.match(sitemap, /hreflang="en"/);
   assert.match(sitemap, /hreflang="x-default"/);
-  assert.doesNotMatch(sitemap, /hreflang="(?:fi|de|es|fr)"|\/troubleshooter\/|\/error-codes\/|\/models\//);
+  assert.doesNotMatch(sitemap, /hreflang="(?:fi|de|es|fr)"|\/troubleshooter\/|\/error-codes\//);
+  for (const path of modelPaths) assert.ok(sitemap.includes(`<loc>${expectedOrigin}${path}</loc>`));
   assert.doesNotMatch(sitemap, /demo|needs-review|fictional/i);
   assert.equal((sitemap.match(/<lastmod>2026-08-17<\/lastmod>/g) ?? []).length, indexablePaths.length);
   locations.forEach((location) => assert.ok(location.startsWith(`${expectedOrigin}/en/`)));
@@ -404,6 +466,9 @@ test("legacy and unknown records return real 404s without competing metadata", a
     "/dishwashers/bosch/error-codes/e15/",
     "/en/dishwashers/bosch/error-codes/e15/",
     "/en/dishwashers/bosch/models/example-dw-100/",
+    "/en/dishwashers/whirlpool/models/wdf550safw/",
+    "/en/dishwashers/samsung/models/dw60a6090bb/",
+    "/en/dishwashers/samsung/models/dw60a6090bb-ef/4c/",
     "/en/dishwashers/problems/demo-not-starting/",
     "/en/dishwashers/bosch/demo-01/",
     "/en/dishwashers/bosch/e17/",

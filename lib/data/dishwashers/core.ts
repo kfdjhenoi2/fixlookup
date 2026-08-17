@@ -1,6 +1,5 @@
 import type {
   DeviceCategoryKnowledge,
-  DeviceModelKnowledge,
   ManufacturerKnowledge,
   MarketKnowledge,
   ModelFamilyKnowledge,
@@ -15,6 +14,9 @@ export const manufacturerKnowledge: ManufacturerKnowledge[] = [
   "whirlpool",
   "samsung",
   "lg",
+  "ge",
+  "miele",
+  "beko",
 ].map((slug) => ({
   id: `manufacturer-${slug}`,
   categoryIds: [dishwasherCategoryId],
@@ -33,10 +35,11 @@ export const marketKnowledge: MarketKnowledge[] = [
   { id: "market-uk" },
   { id: "market-ie" },
   { id: "market-mx" },
+  { id: "market-de" },
+  { id: "market-sk" },
 ];
 
 export const modelFamilyKnowledge: ModelFamilyKnowledge[] = [];
-export const modelKnowledge: DeviceModelKnowledge[] = [];
 
 export const troubleshooterKnowledge: TroubleshooterKnowledgeNode[] = [
   { id: "start", kind: "question", safetyLevel: "caution", nextNodeIds: ["stop", "details"] },
@@ -45,4 +48,3 @@ export const troubleshooterKnowledge: TroubleshooterKnowledgeNode[] = [
   { id: "sources", kind: "outcome", safetyLevel: "user-safe" },
   { id: "stop", kind: "outcome", safetyLevel: "professional-only" },
 ];
-

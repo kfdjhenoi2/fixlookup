@@ -5,6 +5,7 @@ import type {
   ErrorSignalTranslation,
   GuideTranslation,
   ManufacturerTranslation,
+  MarketTranslation,
   ModelFamilyTranslation,
   ModelTranslation,
   ProblemTranslation,
@@ -26,6 +27,7 @@ export interface LocaleContent {
   };
   categories: Record<string, CategoryTranslation>;
   manufacturers: Record<string, ManufacturerTranslation>;
+  markets: Record<string, MarketTranslation>;
   modelFamilies: Record<string, ModelFamilyTranslation>;
   models: Record<string, ModelTranslation>;
   problems: Record<string, ProblemTranslation>;

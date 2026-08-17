@@ -13,6 +13,7 @@ const item = (overrides) => ({
   titleTerms: [],
   descriptionTerms: [],
   applicabilityIdentifiers: [],
+  verifiedApplicabilityCombinations: [],
   ...overrides,
 });
 
@@ -23,9 +24,11 @@ const records = [
   item({ id: "samsung-1e", label: "Samsung 1E", manufacturer: "Samsung", identifiers: ["1E"], href: "/samsung/1e" }),
   item({ id: "samsung-5c", label: "Samsung 5C", manufacturer: "Samsung", identifiers: ["5C"], aliases: ["5E"], href: "/samsung/5c" }),
   item({ id: "lg-ie", label: "LG IE", manufacturer: "LG", identifiers: ["IE"], href: "/lg/ie" }),
-  item({ id: "model-scoped-e15", label: "Example E15", manufacturer: "Example", identifiers: ["E15"], applicabilityIdentifiers: ["SHPM88Z75N"], href: "/example/e15" }),
+  item({ id: "model-scoped-e15", label: "Example E15", manufacturer: "Example", identifiers: ["E15"], aliases: ["E17"], applicabilityIdentifiers: ["SHPM88Z75N"], verifiedApplicabilityCombinations: ["SHPM88Z75N E15"], href: "/example/e15" }),
   item({ id: "unscoped-e15", label: "Other E15", manufacturer: "Other", identifiers: ["E15"], href: "/other/e15" }),
   item({ id: "exact-model", type: "model", label: "Bosch SHPM88Z75N", manufacturer: "Bosch", identifiers: ["SHPM88Z75N"], href: "/bosch/models/shpm88z75n" }),
+  item({ id: "samsung-exact-model", type: "model", label: "Samsung DW60A6090BB/EF", manufacturer: "Samsung", identifiers: ["DW60A6090BB/EF", "DW60A6090BBEF"], applicabilityIdentifiers: ["4C", "LC"], verifiedApplicabilityCombinations: ["DW60A6090BB/EF 4C", "DW60A6090BB/EF LC"], href: "/samsung/models/dw60a6090bb-ef" }),
+  item({ id: "samsung-exact-4c", label: "Samsung 4C", manufacturer: "Samsung", identifiers: ["4C"], aliases: ["4E"], applicabilityIdentifiers: ["DW60A6090BB/EF"], verifiedApplicabilityCombinations: ["DW60A6090BB/EF 4C"], href: "/samsung/4c" }),
   item({ id: "drain-problem", type: "problem", label: "Dishwasher not draining", titleTerms: ["standing water", "not draining"], descriptionTerms: ["water remains after a cycle"], href: "/problems/drain" }),
 ];
 
@@ -49,6 +52,14 @@ test("model-qualified error queries require explicit applicability", () => {
   assert.deepEqual(results.map((record) => record.id), ["model-scoped-e15"]);
   assert.ok(!results.some((record) => record.id === "unscoped-e15"));
   assert.deepEqual(searchKnowledgeItems(records, "SHPM88Z75N Z99"), []);
+  assert.deepEqual(searchKnowledgeItems(records, "SHPM88Z75N E17"), [], "an unverified alias must not inherit exact-model applicability");
+});
+
+test("exact model suffixes and verified code identifiers survive tolerant search", () => {
+  assert.equal(searchKnowledgeItems(records, "DW60A6090BB-EF")[0]?.id, "samsung-exact-model");
+  assert.ok(searchKnowledgeItems(records, "Samsung DW60A6090BB/EF 4C").some((record) => record.id === "samsung-exact-4c"));
+  assert.deepEqual(searchKnowledgeItems(records, "DW60A6090BB/EF 4E"), [], "4E is not verified for this exact model");
+  assert.deepEqual(searchKnowledgeItems(records, "DW60A6090BB 4C"), [], "a missing market suffix must not inherit the exact relationship");
 });
 
 test("manufacturer context disambiguates visually similar codes", () => {

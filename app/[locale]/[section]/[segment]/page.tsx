@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { JsonLd } from "@/components/json-ld";
-import { VerificationBadge } from "@/components/status-badge";
 import { Troubleshooter } from "@/components/troubleshooter";
 import { getCachedContent } from "@/lib/content";
 import type { Locale } from "@/lib/i18n/config";
@@ -47,10 +46,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const manufacturer = content.getManufacturerBySlug(segment);
   if (!manufacturer || !manufacturer.categoryIds.includes(category.id) || !content.manufacturerHasIndexableContent(manufacturer.id, category.id)) return {};
   const page = content.messages.pages.manufacturer;
+  const hasPublishedCodes = content.errorCodes.some((record) =>
+    record.manufacturerId === manufacturer.id && record.categoryId === category.id && content.isErrorCodeIndexable(record),
+  );
   return createPageMetadata({
     locale,
     title: formatMessage(page.metaTitle, { name: manufacturer.name }),
-    description: formatMessage(page.metaDescription, { name: manufacturer.name }),
+    description: formatMessage(hasPublishedCodes ? page.metaDescription : page.metaDescriptionModels, { name: manufacturer.name }),
     path: paths.manufacturer(locale, category, manufacturer),
     pathForLocale: (candidate) => {
       const candidateContent = getCachedContent(candidate);
@@ -88,7 +90,18 @@ function ManufacturerPage({ locale, category, manufacturer, content }: { locale:
         <div className="content-layout"><div>
           <section className="section-block section-block-first" aria-labelledby="models-heading">
             <div className="section-heading"><div><span className="eyebrow">{page.modelEyebrow}</span><h2 id="models-heading">{page.models}</h2></div><span className="section-note">{page.exactOnly}</span></div>
-            {models.length ? <div className="record-list">{models.map((model) => <Link href={paths.model(locale, category, manufacturer, model)} key={model.id}><div><VerificationBadge status={model.verificationStatus} labels={content.messages.verificationLabels} /><h3>{model.name}</h3><p>{model.modelNumber}{model.isFictional ? ` · ${page.fictional}` : ""}</p></div><span className="record-arrow" aria-hidden="true">→</span></Link>)}</div> : <div className="empty-state"><span className="empty-state-code">00</span><div><h3>{page.noModels}</h3><p>{page.noModelsBody}</p></div></div>}
+            {models.length ? <div className="record-list">{models.map((model) => {
+              const marketNames = model.marketIds.flatMap((marketId) => {
+                const market = content.getMarketById(marketId);
+                return market ? [market.name] : [];
+              });
+              const details = [
+                `${page.market}: ${marketNames.join(", ")}`,
+                formatMessage(page.topicCount, { count: model.problemRelationships.length }),
+                ...(model.errorRelationships.length ? [formatMessage(page.errorCount, { count: model.errorRelationships.reduce((count, relationship) => count + relationship.verifiedIdentifiers.length, 0) })] : []),
+              ];
+              return <Link href={paths.model(locale, category, manufacturer, model)} key={model.id}><div><span className="badge badge-verified">{page.modelEvidence}</span><h3>{model.name}</h3><p><strong>{model.modelNumber}</strong></p><p>{details.join(" · ")}</p></div><span className="record-arrow" aria-hidden="true">→</span></Link>;
+            })}</div> : <div className="empty-state"><span className="empty-state-code">00</span><div><h3>{page.noModels}</h3><p>{page.noModelsBody}</p></div></div>}
           </section>
           <section className="section-block" aria-labelledby="codes-heading">
             <div className="section-heading"><div><span className="eyebrow">{page.codeEyebrow}</span><h2 id="codes-heading">{page.errorCodes}</h2></div></div>

@@ -1,6 +1,7 @@
 import { boschErrors } from "./bosch/errors";
 import { electroluxErrors } from "./electrolux/errors";
 import { lgErrors } from "./lg/errors";
+import { dishwasherModels } from "./models";
 import { samsungErrors } from "./samsung/errors";
 import { siemensErrors } from "./siemens/errors";
 import { sharedEvidenceClaimKnowledge } from "./shared";
@@ -11,9 +12,11 @@ export {
   manufacturerKnowledge,
   marketKnowledge,
   modelFamilyKnowledge,
-  modelKnowledge,
   troubleshooterKnowledge,
 } from "./core";
+export const modelKnowledge = dishwasherModels.models;
+export const modelErrorRelationshipKnowledge = dishwasherModels.errorRelationships;
+export const modelProblemRelationshipKnowledge = dishwasherModels.problemRelationships;
 export { sourceKnowledge } from "./sources";
 export { guideKnowledge, problemKnowledge } from "./shared";
 
@@ -32,5 +35,5 @@ export const applicabilityScopeKnowledge = manufacturerErrors.flatMap((records) 
 export const evidenceClaimKnowledge = [
   ...manufacturerErrors.flatMap((records) => records.evidenceClaims),
   ...sharedEvidenceClaimKnowledge,
+  ...dishwasherModels.evidenceClaims,
 ];
-

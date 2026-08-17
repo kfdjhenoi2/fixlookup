@@ -2,6 +2,10 @@ export type VerificationStatus = "demo" | "needs-review" | "verified";
 
 export type SafetyLevel = "user-safe" | "caution" | "professional-only";
 
+export type ModelIndexabilityClass = "A" | "B" | "C";
+
+export type ModelPublicationStatus = "indexable" | "structured-only";
+
 export type SourceKind =
   | "manufacturer-manual"
   | "manufacturer-support"
@@ -15,6 +19,8 @@ export type EvidenceClaimKind =
   | "applicability"
   | "guide-step"
   | "safety-boundary"
+  | "model-identity"
+  | "model-documentation"
   | "model-relationship";
 
 export type ApplicabilityScopeKind =
@@ -51,12 +57,36 @@ export interface ModelFamilyKnowledge {
 export interface DeviceModelKnowledge {
   id: string;
   modelNumber: string;
+  normalizedSearchIdentifier: string;
+  officialAliases: string[];
   categoryId: string;
   manufacturerId: string;
+  marketIds: string[];
   familyId?: string;
   evidenceClaimIds: string[];
+  identityClaimIds: string[];
+  manualClaimIds: string[];
+  indexabilityClass: ModelIndexabilityClass;
+  publicationStatus: ModelPublicationStatus;
   verificationStatus: VerificationStatus;
   isFictional: boolean;
+}
+
+export interface ModelErrorRelationshipKnowledge {
+  id: string;
+  modelId: string;
+  interpretationId: string;
+  verifiedIdentifiers: string[];
+  evidenceClaimIds: string[];
+  verificationStatus: VerificationStatus;
+}
+
+export interface ModelProblemRelationshipKnowledge {
+  id: string;
+  modelId: string;
+  problemId: string;
+  evidenceClaimIds: string[];
+  verificationStatus: VerificationStatus;
 }
 
 export interface ProblemKnowledge {
@@ -166,6 +196,10 @@ export interface ManufacturerTranslation {
   overview: string;
 }
 
+export interface MarketTranslation {
+  name: string;
+}
+
 export interface ModelFamilyTranslation {
   slug: string;
   name: string;
@@ -223,12 +257,24 @@ export interface DeviceCategory extends DeviceCategoryKnowledge, CategoryTransla
   manufacturerIds: string[];
 }
 export interface Manufacturer extends ManufacturerKnowledge, ManufacturerTranslation {}
-export type Market = MarketKnowledge;
+export interface Market extends MarketKnowledge, MarketTranslation {}
 export interface ModelFamily extends ModelFamilyKnowledge, ModelFamilyTranslation {
   sourceIds: string[];
 }
 export interface DeviceModel extends DeviceModelKnowledge, ModelTranslation {
+  errorRelationships: ModelErrorRelationship[];
+  problemRelationships: ModelProblemRelationship[];
+  problemIds: string[];
   guideIds: string[];
+  identitySourceIds: string[];
+  manualSourceIds: string[];
+  sourceIds: string[];
+}
+export interface ModelErrorRelationship extends ModelErrorRelationshipKnowledge {
+  signalId: string;
+  sourceIds: string[];
+}
+export interface ModelProblemRelationship extends ModelProblemRelationshipKnowledge {
   sourceIds: string[];
 }
 export interface Problem extends ProblemKnowledge, ProblemTranslation {
@@ -277,6 +323,7 @@ export interface SearchItem {
   titleTerms: string[];
   descriptionTerms: string[];
   applicabilityIdentifiers: string[];
+  verifiedApplicabilityCombinations: string[];
 }
 
 export interface TroubleshooterOption {

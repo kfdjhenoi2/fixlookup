@@ -63,7 +63,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
               .map((code) => content.getGuideById(code.guideId)?.lastReviewed),
             ...content.models
               .filter((model) => model.categoryId === category.id && model.manufacturerId === manufacturer.id && content.isModelIndexable(model))
-              .flatMap((model) => model.guideIds.map((id) => content.getGuideById(id)?.lastReviewed)),
+              .flatMap((model) => [
+                ...model.guideIds.map((id) => content.getGuideById(id)?.lastReviewed),
+                ...model.sourceIds.map((id) => content.sources.find((source) => source.id === id)?.lastReviewed),
+              ]),
           ];
           return {
             path: paths.manufacturer(locale, category, manufacturer),
@@ -89,7 +92,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
           return [{
             path: paths.model(locale, category, manufacturer, model),
             priority: 0.7,
-            lastModified: latestReviewDate(model.guideIds.map((id) => content.getGuideById(id)?.lastReviewed)),
+            lastModified: latestReviewDate([
+              ...model.guideIds.map((id) => content.getGuideById(id)?.lastReviewed),
+              ...model.sourceIds.map((id) => content.sources.find((source) => source.id === id)?.lastReviewed),
+            ]),
             pathForLocale: (candidate) => {
               const candidateContent = getCachedContent(candidate);
               const localizedCategory = candidateContent.getCategoryById(category.id);

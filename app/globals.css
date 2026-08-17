@@ -964,6 +964,65 @@ a.content-card:hover {
   font-size: 0.78rem;
 }
 
+.record-list strong,
+.fact-grid strong {
+  overflow-wrap: anywhere;
+}
+
+.model-relationship-list {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.model-relationship {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.15rem;
+}
+
+.model-relationship + .model-relationship {
+  border-top: 1px solid var(--line);
+}
+
+.model-relationship h3 {
+  margin: 0.35rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.model-relationship h3 a:hover {
+  color: var(--green-bright);
+}
+
+.model-relationship p:not(.claim-sources) {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.model-relationship code {
+  display: inline-block;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.4rem;
+  background: var(--green-deep);
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 760;
+}
+
+.model-boundaries {
+  display: grid;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.model-boundaries .notice {
+  margin-top: 0;
+}
+
 .record-arrow {
   width: 2.2rem;
   height: 2.2rem;
@@ -1195,7 +1254,9 @@ a.content-card:hover {
   border-radius: var(--radius-sm);
 }
 
-.notice strong {
+.notice strong,
+.notice h2 {
+  margin: 0;
   font-size: 0.84rem;
 }
 
@@ -1878,6 +1939,15 @@ a.content-card:hover {
   .fact-grid > div + div {
     border-top: 0;
     border-left: 1px solid var(--line);
+  }
+
+  .model-relationship {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .model-boundaries {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .error-hero {
