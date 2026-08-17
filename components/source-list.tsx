@@ -1,5 +1,6 @@
 import type { SourceReference } from "@/lib/types";
 import { reviewDueDate } from "@/lib/review";
+import { TrackedSourceLink } from "./tracked-source-link";
 import { VerificationBadge } from "./status-badge";
 
 export function ClaimSources({
@@ -62,9 +63,9 @@ export function SourceList({
               <span className="source-type">{sourceTypeLabels[source.type]}</span>
               <h3>
                 {source.url ? (
-                  <a href={source.url} rel="noreferrer" target="_blank">
+                  <TrackedSourceLink href={source.url} sourceId={source.id} sourceType={source.type}>
                     {source.title}<span className="sr-only"> ({messages.opensNewTab})</span>
-                  </a>
+                  </TrackedSourceLink>
                 ) : source.title}
               </h3>
               <p>

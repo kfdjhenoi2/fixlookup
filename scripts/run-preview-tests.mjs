@@ -1,6 +1,10 @@
 import { spawnSync } from "node:child_process";
 
-const environment = { ...process.env, VERCEL_ENV: "preview" };
+const environment = {
+  ...process.env,
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: "G-TESTPREVIEW1",
+  VERCEL_ENV: "preview",
+};
 const npmCli = process.env.npm_execpath;
 if (!npmCli) {
   process.stderr.write("npm_execpath is unavailable; run this check through npm.\n");

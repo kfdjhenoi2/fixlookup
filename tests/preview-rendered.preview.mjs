@@ -27,4 +27,5 @@ test("preview build blocks crawling at the response and document layers", async 
   assert.match(html, /name="robots" content="noindex, nofollow, nocache"/);
   assert.match(html, /rel="canonical" href="https:\/\/fixlookup\.com\/en\/"/);
   assert.doesNotMatch(html, /rel="canonical" href="http:\/\/preview\.local|property="og:url" content="http:\/\/preview\.local/);
+  assert.doesNotMatch(html, /G-TESTPREVIEW1|https:\/\/www\.googletagmanager\.com\/gtag\/js|class="analytics-preferences-trigger"/);
 });

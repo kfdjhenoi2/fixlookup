@@ -22,6 +22,7 @@ export function generateStaticParams() {
       { locale, section: content.messages.routes.about },
       { locale, section: content.messages.routes.editorial },
       { locale, section: content.messages.routes.safety },
+      { locale, section: content.messages.routes.privacy },
       { locale, section: content.messages.routes.contact },
       ...content.deviceCategories
         .filter((category) => content.categoryHasIndexableContent(category.id))
@@ -127,7 +128,7 @@ function CategoryPage({ locale, section, content }: { locale: typeof supportedLo
   );
 }
 
-type GovernancePageId = "about" | "editorial" | "safety" | "contact";
+type GovernancePageId = "about" | "editorial" | "safety" | "privacy" | "contact";
 
 interface GovernancePageDefinition {
   id: GovernancePageId;
@@ -167,6 +168,17 @@ function getGovernancePage(content: Content, locale: Locale, section: string): G
       ],
     },
     {
+      id: "privacy", path: paths.privacy(locale), page: pages.privacy,
+      sections: [
+        { title: pages.privacy.analyticsTitle, body: pages.privacy.analyticsBody },
+        { title: pages.privacy.consentTitle, body: pages.privacy.consentBody },
+        { title: pages.privacy.storageTitle, body: pages.privacy.storageBody },
+        { title: pages.privacy.purposeTitle, body: pages.privacy.purposeBody },
+        { title: pages.privacy.advertisingTitle, body: pages.privacy.advertisingBody },
+        { title: pages.privacy.minimizationTitle, body: pages.privacy.minimizationBody },
+      ],
+    },
+    {
       id: "contact", path: paths.contact(locale), page: pages.contact,
       sections: [
         { title: pages.contact.reportTitle, body: pages.contact.reportBody },
@@ -179,6 +191,7 @@ function getGovernancePage(content: Content, locale: Locale, section: string): G
     about: routes.about,
     editorial: routes.editorial,
     safety: routes.safety,
+    privacy: routes.privacy,
     contact: routes.contact,
   };
   return definitions.find((definition) => routeById[definition.id] === section);

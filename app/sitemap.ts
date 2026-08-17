@@ -16,6 +16,7 @@ const governancePaths = [
   { priority: 0.4, path: paths.about },
   { priority: 0.4, path: paths.editorial },
   { priority: 0.4, path: paths.safety },
+  { priority: 0.3, path: paths.privacy },
   { priority: 0.3, path: paths.contact },
 ] as const;
 

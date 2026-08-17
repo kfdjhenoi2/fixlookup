@@ -22,6 +22,7 @@ export const paths = {
   about: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.about]),
   editorial: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.editorial]),
   safety: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.safety]),
+  privacy: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.privacy]),
   contact: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.contact]),
 };
 

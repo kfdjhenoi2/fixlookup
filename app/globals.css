@@ -1618,6 +1618,22 @@ a.content-card:hover {
   color: var(--green-bright);
 }
 
+.analytics-preferences-trigger {
+  width: fit-content;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: inherit;
+  text-align: left;
+}
+
+.analytics-preferences-trigger:hover {
+  color: var(--green-bright);
+}
+
 .footer-status {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1679,6 +1695,109 @@ a.content-card:hover {
   margin-bottom: 0.55rem;
   color: var(--green-deep);
   font-weight: 760;
+}
+
+.analytics-consent-banner {
+  position: fixed;
+  z-index: 120;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  display: grid;
+  gap: 1.25rem;
+  width: min(calc(100% - 2rem), 58rem);
+  margin-inline: auto;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  background: var(--green-deep);
+  box-shadow: var(--shadow-lg);
+  color: var(--white);
+}
+
+.analytics-consent-banner h2,
+.analytics-preferences-dialog h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.analytics-consent-banner p,
+.analytics-preferences-dialog p {
+  margin: 0;
+}
+
+.analytics-consent-banner p {
+  max-width: 43rem;
+  color: #d9e8e4;
+  font-size: 0.88rem;
+}
+
+.analytics-consent-banner a,
+.analytics-preferences-dialog a {
+  display: inline-block;
+  margin-top: 0.55rem;
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 720;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.analytics-consent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.analytics-consent-banner .button-secondary {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: transparent;
+  color: var(--white);
+}
+
+.analytics-consent-banner .button-primary {
+  background: var(--mint);
+  color: var(--green-deep);
+}
+
+.analytics-preferences-dialog {
+  width: min(calc(100% - 2rem), 34rem);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 0;
+  background: var(--card);
+  box-shadow: var(--shadow-lg);
+  color: var(--ink);
+}
+
+.analytics-preferences-dialog::backdrop {
+  background: rgba(2, 24, 21, 0.62);
+}
+
+.analytics-preferences-content {
+  padding: 1.4rem;
+}
+
+.analytics-preferences-content > p {
+  color: var(--ink-soft);
+}
+
+.analytics-preferences-content .analytics-current-choice {
+  margin-top: 1rem;
+  color: var(--green-deep);
+  font-weight: 760;
+}
+
+.analytics-preferences-content .analytics-consent-actions {
+  margin-top: 1.25rem;
+}
+
+.analytics-dialog-close {
+  margin-top: 0.35rem;
+  padding-inline: 0;
 }
 
 @media (min-width: 36rem) {
@@ -1770,6 +1889,12 @@ a.content-card:hover {
 
   .footer-grid {
     grid-template-columns: 1.5fr 0.7fr 0.9fr;
+  }
+
+  .analytics-consent-banner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    padding: 1.4rem;
   }
 }
 

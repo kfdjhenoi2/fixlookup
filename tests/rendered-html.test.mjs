@@ -45,6 +45,7 @@ const governancePaths = [
   "/en/about/",
   "/en/editorial-policy/",
   "/en/safety/",
+  "/en/privacy/",
   "/en/contact/",
 ];
 
@@ -105,6 +106,10 @@ test("security policy includes browser hardening and preview robots protection",
   assert.match(production["Content-Security-Policy"], /default-src 'self'/);
   assert.match(production["Content-Security-Policy"], /object-src 'none'/);
   assert.match(production["Content-Security-Policy"], /frame-ancestors 'none'/);
+  assert.match(production["Content-Security-Policy"], /script-src[^;]*https:\/\/www\.googletagmanager\.com/);
+  assert.match(production["Content-Security-Policy"], /connect-src[^;]*https:\/\/\*\.google-analytics\.com/);
+  assert.match(production["Content-Security-Policy"], /img-src[^;]*https:\/\/\*\.google-analytics\.com/);
+  assert.doesNotMatch(production["Content-Security-Policy"], /doubleclick|googleadservices/i);
   assert.equal(production["X-Content-Type-Options"], "nosniff");
   assert.equal(production["X-Frame-Options"], "DENY");
   assert.equal(production["Referrer-Policy"], "strict-origin-when-cross-origin");
@@ -159,6 +164,11 @@ test("robots allows crawling and advertises one canonical sitemap", async () => 
   assert.equal((robots.match(/^Sitemap:/gim) ?? []).length, 1);
 });
 
+test("server-rendered pages do not include Google Analytics before browser consent", async () => {
+  const html = await expectPage("/en/", [/Optional analytics|Find the right next step/]);
+  assert.doesNotMatch(html, /googletagmanager\.com\/gtag\/js|_next-ga-init|fixlookup-ga-privacy-bootstrap/);
+});
+
 test("renders locale-aware category, manufacturer, and search links", async () => {
   const category = await expectPage("/en/dishwashers/", [
     /Dishwasher troubleshooting/,
@@ -179,6 +189,7 @@ test("trust pages explain the editorial, safety, correction, and contact boundar
     ["/en/about/", [/About FixLookup/, /source-aware troubleshooting/]],
     ["/en/editorial-policy/", [/How FixLookup reviews and publishes technical information/, /What verified means/]],
     ["/en/safety/", [/Safe next steps come before complete instructions/, /Professional-only work/]],
+    ["/en/privacy/", [/Analytics is optional and consent-based/, /Google Analytics usage/, /fixlookup\.analytics-consent\.v1/, /Advertising features are disabled/]],
     ["/en/contact/", [/Help keep the record accurate/, /Correction contact will be available soon/, /No correction inbox is currently available/]],
   ]);
   for (const [path, patterns] of expectations) {
@@ -186,6 +197,10 @@ test("trust pages explain the editorial, safety, correction, and contact boundar
     assert.doesNotMatch(html, /name="robots" content="noindex/);
     if (path === "/en/contact/") {
       assert.doesNotMatch(html, /mailto:|corrections@fixlookup\.com/i);
+    }
+    if (path === "/en/privacy/") {
+      assert.match(html, /href="\/en\/privacy\/"/);
+      assert.doesNotMatch(html, /personal data is anonymous|GDPR compliant|legitimate interest/i);
     }
   }
 });

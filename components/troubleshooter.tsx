@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { trackAnalyticsEvent } from "@/lib/analytics/events";
+import type { Locale } from "@/lib/i18n/config";
 import type { TroubleshooterNode } from "@/lib/types";
 
 export function Troubleshooter({
   nodes,
   messages,
+  categoryId,
+  locale,
 }: {
   nodes: TroubleshooterNode[];
   messages: Record<string, string>;
+  categoryId: string;
+  locale: Locale;
 }) {
   const [currentId, setCurrentId] = useState("start");
   const [history, setHistory] = useState<string[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const shouldMoveFocus = useRef(false);
+  const hasStarted = useRef(false);
   const node = nodes.find((candidate) => candidate.id === currentId) ?? nodes[0];
   const progress = Math.min(100, 34 + history.length * 33);
 
@@ -22,6 +29,20 @@ export function Troubleshooter({
   }, [currentId]);
 
   function choose(nextNodeId: string) {
+    const nextNode = nodes.find((candidate) => candidate.id === nextNodeId);
+    if (!hasStarted.current) {
+      hasStarted.current = true;
+      trackAnalyticsEvent("troubleshooter_started", { category_id: categoryId, locale });
+    }
+    if (nextNode?.kind === "outcome") {
+      trackAnalyticsEvent("troubleshooter_completed", {
+        category_id: categoryId,
+        locale,
+        outcome_id: nextNode.id,
+        safety_level: nextNode.safetyLevel,
+        step_count: history.length + 1,
+      });
+    }
     shouldMoveFocus.current = true;
     setHistory((current) => [...current, currentId]);
     setCurrentId(nextNodeId);
@@ -35,6 +56,7 @@ export function Troubleshooter({
   }
   function reset() {
     shouldMoveFocus.current = true;
+    hasStarted.current = false;
     setHistory([]);
     setCurrentId("start");
     if (currentId === "start") headingRef.current?.focus();

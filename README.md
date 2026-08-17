@@ -33,6 +33,16 @@ Only records with `verificationStatus: "verified"`, verified source relationship
 
 `https://fixlookup.com` is the single canonical origin. Vercel deployments with `VERCEL_ENV=preview` or `VERCEL_ENV=development` receive page-level `noindex`, a disallowing `robots.txt`, and an `X-Robots-Tag` response header. Vercel production remains indexable. Other preview hosts can enable the same protection with `FIXLOOKUP_NOINDEX=1`. Local development leaves these variables unset and behaves normally.
 
+## Consent-aware analytics
+
+FixLookup uses GA4 basic consent behavior: no Google Analytics script or request is created until the visitor accepts analytics. The choice is stored locally under `fixlookup.analytics-consent.v1`, can be changed from the footer, and a rejection keeps the tag disabled. Revoking a previous grant updates consent to denied, removes FixLookup GA cookies where accessible, and reloads without the tag.
+
+Set `NEXT_PUBLIC_GA_MEASUREMENT_ID=G-PCYPWCPML1` for the Vercel Production environment only. The ID is public configuration, not a secret. Normal `next dev` sessions remain analytics-free even when the ID exists; intentional local testing also requires `NEXT_PUBLIC_ENABLE_ANALYTICS=true`. Do not set that override in Vercel. Builds protected by the existing preview/noindex policy keep analytics unavailable even if an ID is accidentally present.
+
+Page views use GA4's browser-history measurement through the root App Router layout, so the application does not send a second manual page view. In the GA4 web stream, keep Enhanced Measurement's **Page views → Page changes based on browser history events** enabled. Custom events are centralized and consent-gated. The current UI emits `search_performed`, `zero_result_search`, `troubleshooter_started`, `troubleshooter_completed`, and `source_clicked`. `problem_solved` and `affiliate_click` have typed definitions for future explicit interactions but are not emitted. Search text and other free-form user input are not event parameters.
+
+Google Signals and advertising-personalization signals are explicitly disabled. Consent for advertising storage, advertising user data, and advertising personalization remains denied. The CSP allows only the Google tag script host and GA collection/image hosts needed by this implementation; no advertising domains are allowed.
+
 Security headers are centralized in `lib/security.mjs` and applied through standard Next.js configuration. The policy permits the current Next.js runtime while keeping external scripts and connections closed by default. A future analytics rollout should extend `script-src` and `connect-src` deliberately rather than weakening the full policy.
 
 ## Editorial governance

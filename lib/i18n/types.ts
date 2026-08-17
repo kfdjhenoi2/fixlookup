@@ -19,6 +19,7 @@ export interface LocaleContent {
     about: string;
     editorial: string;
     safety: string;
+    privacy: string;
     contact: string;
   };
   categories: Record<string, CategoryTranslation>;

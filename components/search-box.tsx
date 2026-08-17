@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { trackAnalyticsEvent } from "@/lib/analytics/events";
 import type { SearchItem } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -26,6 +27,7 @@ export function SearchBox({
   const router = useRouter();
   const inputId = useId();
   const resultsId = useId();
+  const lastZeroResultQuery = useRef("");
   const normalizedQuery = query.trim().toLocaleLowerCase(locale);
   const results = useMemo(() => {
     if (!normalizedQuery) return [];
@@ -43,9 +45,35 @@ export function SearchBox({
       .map(({ item }) => item);
   }, [items, locale, normalizedQuery, typeLabels]);
 
+  useEffect(() => {
+    if (normalizedQuery.length < 2 || results.length) return;
+    const timer = window.setTimeout(() => {
+      if (lastZeroResultQuery.current === normalizedQuery) return;
+      lastZeroResultQuery.current = normalizedQuery;
+      trackAnalyticsEvent("zero_result_search", {
+        locale,
+        query_length: normalizedQuery.length,
+      });
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [locale, normalizedQuery, results.length]);
+
+  function trackSearch(interaction: "submit" | "result_click", result?: SearchItem) {
+    trackAnalyticsEvent("search_performed", {
+      interaction,
+      locale,
+      query_length: normalizedQuery.length,
+      result_count: results.length,
+      result_type: result?.type,
+    });
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (results[0]) router.push(results[0].href);
+    if (results[0]) {
+      trackSearch("submit", results[0]);
+      router.push(results[0].href);
+    }
   }
 
   return (
@@ -73,7 +101,7 @@ export function SearchBox({
             <ul>
               {results.map((result) => (
                 <li key={result.id}>
-                  <Link href={result.href}>
+                  <Link href={result.href} onClick={() => trackSearch("result_click", result)}>
                     <span className="result-copy">
                       <strong>{result.label}</strong>
                       <small>{result.description}</small>

@@ -331,6 +331,7 @@ function validateContent(content: Content) {
     content.messages.routes.about,
     content.messages.routes.editorial,
     content.messages.routes.safety,
+    content.messages.routes.privacy,
     content.messages.routes.contact,
   ]);
   content.deviceCategories.forEach((record) => {

@@ -110,7 +110,12 @@ function TroubleshooterPage({ locale, category, content }: { locale: Locale; cat
       <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={paths.troubleshooter(locale, category)} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: category.name, href: paths.category(locale, category) }, { label: page.breadcrumb }]} />
       <div className="troubleshooter-layout">
         <header className="troubleshooter-intro"><span className="eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><p>{page.intro}</p><div className="trust-note"><span aria-hidden="true">i</span><p><strong>{page.boundaryTitle}</strong>{" "}{page.boundaryBody}</p></div></header>
-        <Troubleshooter nodes={content.troubleshooterNodes} messages={content.messages.ui} />
+        <Troubleshooter
+          nodes={content.troubleshooterNodes}
+          messages={content.messages.ui}
+          categoryId={category.id}
+          locale={locale}
+        />
       </div>
     </div></main>
   );

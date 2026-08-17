@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AnalyticsPreferencesButton } from "@/components/analytics-consent";
 import type { DeviceCategory } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
 import { paths } from "@/lib/i18n/routing";
@@ -30,7 +31,9 @@ export function SiteFooter({
           <Link href={paths.about(locale)}>{messages.footerAbout}</Link>
           <Link href={paths.editorial(locale)}>{messages.footerEditorial}</Link>
           <Link href={paths.safety(locale)}>{messages.footerSafety}</Link>
+          <Link href={paths.privacy(locale)}>{messages.footerPrivacy}</Link>
           <Link href={paths.contact(locale)}>{messages.footerContact}</Link>
+          <AnalyticsPreferencesButton label={messages.analyticsSettings} />
         </nav>
         <div className="footer-status">
           <span className="status-dot" aria-hidden="true" />
