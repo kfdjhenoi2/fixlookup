@@ -40,11 +40,11 @@ export default function Home() {
             <div className="search-examples" aria-label="Example searches">
               <span>Try:</span>
               <Link href="/dishwashers/bosch">Bosch dishwasher</Link>
-              <Link href="/dishwashers/problems/demo-not-starting">
-                demo symptom
+              <Link href="/dishwashers/problems/dishwasher-not-draining">
+                not draining
               </Link>
-              <Link href="/dishwashers/bosch/error-codes/demo-01">
-                DEMO-01
+              <Link href="/dishwashers/bosch/error-codes/e15">
+                Bosch E15
               </Link>
             </div>
           </div>
@@ -72,7 +72,7 @@ export default function Home() {
                 <span className="proof-index">03</span>
                 <div>
                   <strong>Unknown means unknown</strong>
-                  <p>Demo and unverified records are clearly marked.</p>
+                  <p>Unverified records stay out of the published index.</p>
                 </div>
               </div>
             </div>
@@ -123,7 +123,7 @@ export default function Home() {
               the right context and stops before unsupported repair advice.
             </p>
             <Link className="button-primary" href="/dishwashers/troubleshooter">
-              Start demo troubleshooter
+              Start troubleshooter
             </Link>
           </div>
           <ol className="method-list">
@@ -155,10 +155,10 @@ export default function Home() {
       <section className="section-block site-shell" aria-labelledby="problem-heading">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">Template preview</span>
+            <span className="eyebrow">Source-reviewed guidance</span>
             <h2 id="problem-heading">Small, deliberate problem cluster</h2>
           </div>
-          <span className="section-note">Demo content — not repair advice</span>
+          <span className="section-note">{problems.length} shared guides</span>
         </div>
         <div className="card-grid card-grid-two">
           {problems.map((problem, index) => (
@@ -168,7 +168,7 @@ export default function Home() {
               key={problem.id}
             >
               <span className="card-number">0{index + 1}</span>
-              <span className="badge badge-demo">Demo record</span>
+              <span className="badge badge-verified">Source verified</span>
               <h3>{problem.title}</h3>
               <p>{problem.summary}</p>
               <span className="text-link">View structured record →</span>

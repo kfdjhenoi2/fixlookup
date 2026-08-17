@@ -63,11 +63,14 @@ export interface ErrorCode {
   id: string;
   slug: string;
   code: string;
+  aliases: string[];
   title: string;
   categoryId: string;
   manufacturerId: string;
   modelFamilyIds: string[];
   summary: string;
+  sourceScope: string;
+  applicabilityNote: string;
   guideId?: string;
   sourceIds: string[];
   verificationStatus: VerificationStatus;

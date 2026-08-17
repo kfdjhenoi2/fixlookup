@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { JsonLd } from "@/components/json-ld";
 import { SearchBox } from "@/components/search-box";
+import { VerificationBadge } from "@/components/status-badge";
 import {
   deviceCategories,
   manufacturers,
@@ -14,7 +15,7 @@ import { createPageMetadata } from "@/lib/metadata";
 export const metadata = createPageMetadata({
   title: "Dishwasher troubleshooting",
   description:
-    "Browse dishwasher manufacturers, models, symptoms, and clearly labeled error-code records.",
+    "Browse source-reviewed dishwasher problem guides and manufacturer error-code records with claim-level references.",
   path: "/dishwashers",
 });
 
@@ -45,8 +46,8 @@ export default function DishwashersPage() {
             <span className="eyebrow">Device category</span>
             <h1>Dishwasher troubleshooting</h1>
             <p>
-              Search the structured index or begin with a manufacturer. Demo
-              records are separated from future verified guidance.
+              Search source-reviewed symptom guides and manufacturer error-code
+              records, or begin with the name on your appliance.
             </p>
           </div>
           <div className="category-code" aria-hidden="true">DW / 01</div>
@@ -76,15 +77,15 @@ export default function DishwashersPage() {
           <div className="section-heading">
             <div>
               <span className="eyebrow">Browse by symptom</span>
-              <h2 id="symptoms-heading">Initial problem records</h2>
+              <h2 id="symptoms-heading">Shared troubleshooting guides</h2>
             </div>
-            <span className="section-note">Demonstration only</span>
+            <span className="section-note">{problems.length} reviewed topics</span>
           </div>
           <div className="record-list">
             {problems.map((problem) => (
               <Link href={`/dishwashers/problems/${problem.slug}`} key={problem.id}>
                 <div>
-                  <span className="badge badge-demo">Demo</span>
+                  <VerificationBadge status={problem.verificationStatus} />
                   <h3>{problem.title}</h3>
                   <p>{problem.summary}</p>
                 </div>

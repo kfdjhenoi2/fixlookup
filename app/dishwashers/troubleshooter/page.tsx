@@ -4,7 +4,7 @@ import { troubleshooterNodes } from "@/lib/content";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata = createPageMetadata({
-  title: "Interactive dishwasher troubleshooter demo",
+  title: "Interactive dishwasher troubleshooter",
   description:
     "Try the FixOrReplace safety-first interactive troubleshooting framework.",
   path: "/dishwashers/troubleshooter",
@@ -27,15 +27,16 @@ export default function TroubleshooterPage() {
             <span className="eyebrow">Interactive framework</span>
             <h1>Get oriented before you act.</h1>
             <p>
-              This demo shows how FixOrReplace can branch by safety and evidence.
-              It deliberately does not diagnose a device or suggest an internal
-              repair.
+              This framework branches by safety and evidence, then points toward
+              reviewed guidance. It does not diagnose a device or suggest an
+              internal repair.
             </p>
             <div className="trust-note">
               <span aria-hidden="true">i</span>
               <p>
-                <strong>Demo boundary</strong>
-                No model-specific technical guidance is included yet.
+                <strong>Scope boundary</strong>
+                No model compatibility is assumed; confirm manufacturer guidance
+                in the manual for the exact appliance.
               </p>
             </div>
           </header>

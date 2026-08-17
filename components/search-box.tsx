@@ -94,7 +94,7 @@ export function SearchBox({
           ) : (
             <div className="empty-search">
               <strong>No reviewed match yet</strong>
-              <span>Try a manufacturer name, “dishwasher,” or “demo.”</span>
+              <span>Try a manufacturer name, a symptom such as “not draining,” or a code such as “E15.”</span>
             </div>
           )}
         </div>

@@ -1284,6 +1284,20 @@ a.content-card:hover {
   font-size: 0.82rem;
 }
 
+.claim-sources {
+  margin: 0.7rem 0 0;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+}
+
+.claim-sources a {
+  color: var(--green-bright);
+  font-weight: 760;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
 .source-panel {
   padding-block: 3rem;
   border-top: 1px solid var(--line);
@@ -1302,6 +1316,7 @@ a.content-card:hover {
   align-items: flex-start;
   gap: 1rem;
   padding: 1.15rem;
+  scroll-margin-top: 6rem;
 }
 
 .source-item + .source-item {

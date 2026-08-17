@@ -23,7 +23,7 @@ export function SiteFooter() {
         </nav>
         <div className="footer-status">
           <span className="status-dot" aria-hidden="true" />
-          MVP content is clearly marked as demo or pending review.
+          Published guidance is source-reviewed; compatibility is never inferred.
         </div>
       </div>
     </footer>

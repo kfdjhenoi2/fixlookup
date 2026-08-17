@@ -10,6 +10,14 @@ import type {
   TroubleshooterNode,
   TroubleshootingGuide,
 } from "./types";
+import {
+  dishwasherErrorCodes,
+  dishwasherGuides,
+  dishwasherModelFamilies,
+  dishwasherModels,
+  dishwasherProblems,
+} from "./data/dishwasher-content";
+import { dishwasherSources } from "./data/dishwasher-sources";
 
 export const deviceCategories: DeviceCategory[] = [
   {
@@ -18,7 +26,7 @@ export const deviceCategories: DeviceCategory[] = [
     name: "Dishwashers",
     singularName: "Dishwasher",
     description:
-      "Browse manufacturers, models, symptoms, and error-code records from one structured category.",
+      "Browse source-reviewed dishwasher symptoms and manufacturer error-code records from one structured category.",
     manufacturerIds: [
       "manufacturer-bosch",
       "manufacturer-siemens",
@@ -40,139 +48,20 @@ export const manufacturers: Manufacturer[] = [
   slug: name.toLowerCase(),
   name,
   categoryIds: ["category-dishwashers"],
-  overview: `This ${name} index will list model and error-code records only after their identifiers, applicability, and sources are reviewed.`,
+  overview: `This ${name} index publishes error-code records only when their meaning, source scope, and evidence have been reviewed. Model compatibility is never inferred.`,
 }));
 
-export const modelFamilies: ModelFamily[] = [
-  {
-    id: "family-bosch-demo",
-    slug: "demo-family",
-    name: "Demo family",
-    categoryId: "category-dishwashers",
-    manufacturerId: "manufacturer-bosch",
-    modelIds: ["model-bosch-example-dw-100"],
-    sourceIds: ["source-manufacturer-required"],
-    verificationStatus: "demo",
-  },
-];
+export const modelFamilies: ModelFamily[] = dishwasherModelFamilies;
 
-export const models: DeviceModel[] = [
-  {
-    id: "model-bosch-example-dw-100",
-    slug: "example-dw-100",
-    name: "Example Dishwasher 100",
-    modelNumber: "EXAMPLE-DW-100",
-    categoryId: "category-dishwashers",
-    manufacturerId: "manufacturer-bosch",
-    familyId: "family-bosch-demo",
-    guideIds: ["guide-demo-starting-check"],
-    sourceIds: ["source-manufacturer-required"],
-    verificationStatus: "demo",
-    isFictional: true,
-    note: "This is a fictional record used only to demonstrate the model-page template. It is not a real Bosch model.",
-  },
-];
+export const models: DeviceModel[] = dishwasherModels;
 
-export const problems: Problem[] = [
-  {
-    id: "problem-demo-not-starting",
-    slug: "demo-not-starting",
-    title: "Demo: dishwasher is not starting",
-    categoryId: "category-dishwashers",
-    summary:
-      "A safe example pathway showing how a symptom guide will be structured after device-specific guidance is verified.",
-    symptomLabels: ["No cycle begins", "User-visible message recorded"],
-    guideId: "guide-demo-starting-check",
-    sourceIds: ["source-manufacturer-required"],
-    relatedProblemIds: ["problem-demo-drainage"],
-    safetyLevel: "user-safe",
-    verificationStatus: "demo",
-  },
-  {
-    id: "problem-demo-drainage",
-    slug: "demo-drainage",
-    title: "Demo: dishwasher drainage symptom",
-    categoryId: "category-dishwashers",
-    summary:
-      "A placeholder problem record awaiting manufacturer documentation and technical review.",
-    symptomLabels: ["Drainage symptom recorded"],
-    sourceIds: ["source-manufacturer-required"],
-    relatedProblemIds: ["problem-demo-not-starting"],
-    safetyLevel: "caution",
-    verificationStatus: "needs-review",
-  },
-];
+export const problems: Problem[] = dishwasherProblems;
 
-export const errorCodes: ErrorCode[] = [
-  {
-    id: "error-bosch-demo-01",
-    slug: "demo-01",
-    code: "DEMO-01",
-    title: "Demo error-code record",
-    categoryId: "category-dishwashers",
-    manufacturerId: "manufacturer-bosch",
-    modelFamilyIds: ["family-bosch-demo"],
-    summary:
-      "This fictional code has no appliance meaning. It exists only to demonstrate the error-code page structure.",
-    guideId: "guide-demo-starting-check",
-    sourceIds: ["source-manufacturer-required"],
-    verificationStatus: "demo",
-    isFictional: true,
-  },
-];
+export const errorCodes: ErrorCode[] = dishwasherErrorCodes;
 
-export const guides: TroubleshootingGuide[] = [
-  {
-    id: "guide-demo-starting-check",
-    slug: "demo-starting-check",
-    title: "Demo information-gathering workflow",
-    categoryId: "category-dishwashers",
-    canonicalProblemId: "problem-demo-not-starting",
-    problemIds: ["problem-demo-not-starting"],
-    errorCodeIds: ["error-bosch-demo-01"],
-    safetyLevel: "user-safe",
-    verificationStatus: "demo",
-    lastReviewed: null,
-    sourceIds: ["source-manufacturer-required"],
-    steps: [
-      {
-        id: "step-record-details",
-        title: "Record the visible details",
-        instruction:
-          "Write down the exact model identifier, visible message, and what happened immediately before the issue. Do not remove any panels.",
-        sourceIds: ["source-manufacturer-required"],
-        safetyLevel: "user-safe",
-      },
-      {
-        id: "step-check-hazards",
-        title: "Look for an obvious safety concern",
-        instruction:
-          "If there is smoke, a burning smell, visible damage, or water outside the appliance, stop the demo flow and seek qualified help.",
-        sourceIds: ["source-manufacturer-required"],
-        safetyLevel: "caution",
-      },
-      {
-        id: "step-find-manual",
-        title: "Find the official user documentation",
-        instruction:
-          "Use the recorded model identifier to locate the manufacturer's user manual or support page before attempting any device-specific action.",
-        sourceIds: ["source-manufacturer-required"],
-        safetyLevel: "user-safe",
-      },
-    ],
-  },
-];
+export const guides: TroubleshootingGuide[] = dishwasherGuides;
 
-export const sources: SourceReference[] = [
-  {
-    id: "source-manufacturer-required",
-    title: "Manufacturer documentation required",
-    publisher: "Pending research",
-    type: "editorial-placeholder",
-    verificationStatus: "needs-review",
-    note: "This demo record cannot be treated as technical guidance until a primary source is attached and reviewed.",
-  },
-];
+export const sources: SourceReference[] = dishwasherSources;
 
 export const troubleshooterNodes: TroubleshooterNode[] = [
   {
@@ -211,8 +100,8 @@ export const troubleshooterNodes: TroubleshooterNode[] = [
     id: "sources",
     kind: "outcome",
     eyebrow: "Step 3 of 3",
-    title: "Verified guidance is the next gate",
-    body: "This MVP does not yet contain verified guidance for that identifier. Consult the official user documentation or qualified support.",
+    title: "Match the identifier to reviewed guidance",
+    body: "Search the verified problem and error-code records, then confirm any manufacturer-specific instruction in the official manual for the exact model.",
     safetyLevel: "user-safe",
   },
   {
@@ -242,15 +131,20 @@ export const searchItems: SearchItem[] = [
     href: `/dishwashers/${manufacturer.slug}`,
     keywords: [manufacturer.name, "dishwasher", "brand"],
   })),
-  {
-    id: "search-demo-model",
-    label: "Example Dishwasher 100",
-    description: "Fictional model-page example",
-    type: "Model",
-    href: "/dishwashers/bosch/models/example-dw-100",
-    keywords: ["EXAMPLE-DW-100", "demo", "model"],
-    isDemo: true,
-  },
+  ...models.map((model) => {
+    const manufacturer = manufacturers.find(
+      (candidate) => candidate.id === model.manufacturerId,
+    );
+    return {
+      id: `search-${model.id}`,
+      label: model.name,
+      description: model.modelNumber,
+      type: "Model" as const,
+      href: `/dishwashers/${manufacturer?.slug ?? "unknown"}/models/${model.slug}`,
+      keywords: [model.modelNumber, model.name, "dishwasher", "model"],
+      isDemo: model.verificationStatus !== "verified" || model.isFictional,
+    };
+  }),
   ...problems.map((problem) => ({
     id: `search-${problem.id}`,
     label: problem.title,
@@ -258,17 +152,29 @@ export const searchItems: SearchItem[] = [
     type: "Problem" as const,
     href: `/dishwashers/problems/${problem.slug}`,
     keywords: [...problem.symptomLabels, "dishwasher", "problem"],
-    isDemo: true,
+    isDemo: problem.verificationStatus !== "verified",
   })),
-  {
-    id: "search-demo-error",
-    label: "DEMO-01",
-    description: "Fictional error-code page example",
-    type: "Error code",
-    href: "/dishwashers/bosch/error-codes/demo-01",
-    keywords: ["code", "error", "demo"],
-    isDemo: true,
-  },
+  ...errorCodes.map((errorCode) => {
+    const manufacturer = manufacturers.find(
+      (candidate) => candidate.id === errorCode.manufacturerId,
+    );
+    return {
+      id: `search-${errorCode.id}`,
+      label: `${manufacturer?.name ?? "Dishwasher"} ${errorCode.code}`,
+      description: errorCode.title,
+      type: "Error code" as const,
+      href: `/dishwashers/${manufacturer?.slug ?? "unknown"}/error-codes/${errorCode.slug}`,
+      keywords: [
+        errorCode.code,
+        ...errorCode.aliases,
+        manufacturer?.name ?? "",
+        "dishwasher",
+        "error code",
+      ],
+      isDemo:
+        errorCode.verificationStatus !== "verified" || errorCode.isFictional,
+    };
+  }),
 ];
 
 export const getCategoryBySlug = (slug: string) =>
@@ -433,8 +339,24 @@ function validateContentRelationships() {
   requireUnique("error-code identifiers", errorCodes, (record) =>
     `${record.manufacturerId}:${record.code.toLowerCase()}`,
   );
+  requireUnique(
+    "error-code and alias identifiers",
+    errorCodes.flatMap((record) =>
+      [record.code, ...record.aliases].map((identifier) => ({
+        manufacturerId: record.manufacturerId,
+        identifier,
+      })),
+    ),
+    (record) =>
+      `${record.manufacturerId}:${record.identifier.toLowerCase().trim()}`,
+  );
   requireUniqueIdsAndSlugs("guides", guides);
   requireUnique("source IDs", sources, (record) => record.id);
+  requireUnique(
+    "source URLs",
+    sources.filter((source) => source.url),
+    (source) => source.url!.toLowerCase(),
+  );
   requireUnique("search item IDs", searchItems, (record) => record.id);
   requireUnique("troubleshooter node IDs", troubleshooterNodes, (record) => record.id);
 
@@ -529,6 +451,12 @@ function validateContentRelationships() {
         errors.push(`${errorCode.id} is missing from ${guide.id}.errorCodeIds`);
       }
     }
+    if (!errorCode.sourceScope.trim()) {
+      errors.push(`${errorCode.id} is missing source scope`);
+    }
+    if (!errorCode.applicabilityNote.trim()) {
+      errors.push(`${errorCode.id} is missing an applicability note`);
+    }
     if (
       errorCode.verificationStatus === "verified" &&
       !isErrorCodeIndexable(errorCode)
@@ -545,12 +473,34 @@ function validateContentRelationships() {
     if (!guide.problemIds.includes(guide.canonicalProblemId)) {
       errors.push(`${guide.id}.canonicalProblemId must be included in problemIds`);
     }
+    for (const problemId of guide.problemIds) {
+      const problem = problems.find((candidate) => candidate.id === problemId);
+      if (problem && problem.guideId !== guide.id) {
+        errors.push(`${guide.id} is not the guide assigned by ${problem.id}`);
+      }
+    }
+    for (const errorCodeId of guide.errorCodeIds) {
+      const errorCode = errorCodes.find(
+        (candidate) => candidate.id === errorCodeId,
+      );
+      if (errorCode && errorCode.guideId !== guide.id) {
+        errors.push(`${guide.id} is not the guide assigned by ${errorCode.id}`);
+      }
+    }
     requireUnique(`${guide.id} step IDs`, guide.steps, (step) => step.id);
     for (const step of guide.steps) {
       requireIds(`${guide.id}/${step.id}`, step.sourceIds, sourceIds);
+      for (const sourceId of step.sourceIds) {
+        if (!guide.sourceIds.includes(sourceId)) {
+          errors.push(`${guide.id}/${step.id} uses ${sourceId} outside guide.sourceIds`);
+        }
+      }
     }
     if (guide.verificationStatus === "verified" && !isGuideIndexable(guide)) {
       errors.push(`${guide.id} is verified but lacks publishable step sources`);
+    }
+    if (guide.verificationStatus === "verified" && !guide.lastReviewed) {
+      errors.push(`${guide.id} is verified but has no review date`);
     }
   }
 
@@ -560,6 +510,28 @@ function validateContentRelationships() {
       source.type === "editorial-placeholder"
     ) {
       errors.push(`${source.id} cannot verify an editorial placeholder`);
+    }
+    if (
+      source.verificationStatus === "verified" &&
+      (!source.url || !source.url.startsWith("https://"))
+    ) {
+      errors.push(`${source.id} is verified but has no secure source URL`);
+    }
+  }
+
+  const referencedSourceIds = new Set([
+    ...modelFamilies.flatMap((family) => family.sourceIds),
+    ...models.flatMap((model) => model.sourceIds),
+    ...problems.flatMap((problem) => problem.sourceIds),
+    ...errorCodes.flatMap((errorCode) => errorCode.sourceIds),
+    ...guides.flatMap((guide) => [
+      ...guide.sourceIds,
+      ...guide.steps.flatMap((step) => step.sourceIds),
+    ]),
+  ]);
+  for (const source of sources) {
+    if (!referencedSourceIds.has(source.id)) {
+      errors.push(`${source.id} is not referenced by any content record`);
     }
   }
 

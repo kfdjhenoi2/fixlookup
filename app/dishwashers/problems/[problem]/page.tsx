@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { JsonLd } from "@/components/json-ld";
 import { RelatedProblems } from "@/components/related-problems";
-import { SourceList } from "@/components/source-list";
+import { ClaimSources, SourceList } from "@/components/source-list";
 import { SafetyBadge, VerificationBadge } from "@/components/status-badge";
 import {
   getGuideById,
@@ -15,6 +16,7 @@ import {
   problems,
 } from "@/lib/content";
 import { createPageMetadata } from "@/lib/metadata";
+import { absoluteUrl } from "@/lib/site";
 
 interface ProblemPageProps {
   params: Promise<{ problem: string }>;
@@ -56,6 +58,19 @@ export default async function ProblemPage({ params }: ProblemPageProps) {
 
   return (
     <main className="page-main" id="main-content">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          headline: problem.title,
+          description: problem.summary,
+          url: absoluteUrl(`/dishwashers/problems/${problem.slug}`),
+          dateModified: guide?.lastReviewed ?? undefined,
+          citation: sourceRecords.flatMap((source) =>
+            source.url ? [source.url] : [],
+          ),
+        }}
+      />
       <div className="site-shell article-width">
         <Breadcrumbs
           items={[
@@ -73,6 +88,11 @@ export default async function ProblemPage({ params }: ProblemPageProps) {
           <span className="eyebrow">Problem record</span>
           <h1>{problem.title}</h1>
           <p className="record-lead">{problem.summary}</p>
+          <ClaimSources
+            label="Record sources"
+            sourceIds={problem.sourceIds}
+            sources={sourceRecords}
+          />
         </header>
 
         {problem.verificationStatus !== "verified" ? (
@@ -118,6 +138,10 @@ export default async function ProblemPage({ params }: ProblemPageProps) {
                       <SafetyBadge level={step.safetyLevel} />
                     </div>
                     <p>{step.instruction}</p>
+                    <ClaimSources
+                      sourceIds={step.sourceIds}
+                      sources={sourceRecords}
+                    />
                   </div>
                 </li>
               ))}

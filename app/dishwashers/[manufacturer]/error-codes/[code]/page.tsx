@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { SourceList } from "@/components/source-list";
+import { JsonLd } from "@/components/json-ld";
+import { ClaimSources, SourceList } from "@/components/source-list";
 import { SafetyBadge, VerificationBadge } from "@/components/status-badge";
 import {
   errorCodes,
@@ -15,6 +16,7 @@ import {
   isErrorCodeIndexable,
 } from "@/lib/content";
 import { createPageMetadata } from "@/lib/metadata";
+import { absoluteUrl } from "@/lib/site";
 
 interface ErrorCodePageProps {
   params: Promise<{ manufacturer: string; code: string }>;
@@ -38,7 +40,7 @@ export async function generateMetadata({ params }: ErrorCodePageProps): Promise<
   if (!manufacturer || !errorCode) return {};
 
   return createPageMetadata({
-    title: `${manufacturer.name} ${errorCode.code}${errorCode.isFictional ? " demo error code" : " error code"}`,
+    title: `${manufacturer.name} ${errorCode.code}${errorCode.aliases[0] ? ` / ${errorCode.aliases[0]}` : ""} dishwasher error code`,
     description: errorCode.summary,
     path: `/dishwashers/${manufacturer.slug}/error-codes/${errorCode.slug}`,
     noIndex: !isErrorCodeIndexable(errorCode),
@@ -59,6 +61,20 @@ export default async function ErrorCodePage({ params }: ErrorCodePageProps) {
 
   return (
     <main className="page-main" id="main-content">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          headline: `${manufacturer.name} ${errorCode.title}`,
+          description: errorCode.summary,
+          url: absoluteUrl(
+            `/dishwashers/${manufacturer.slug}/error-codes/${errorCode.slug}`,
+          ),
+          citation: sourceRecords.flatMap((source) =>
+            source.url ? [source.url] : [],
+          ),
+        }}
+      />
       <div className="site-shell article-width">
         <Breadcrumbs
           items={[
@@ -81,11 +97,38 @@ export default async function ErrorCodePage({ params }: ErrorCodePageProps) {
                 <span className="badge badge-fictional">Fictional code</span>
               ) : null}
             </div>
-            <span className="eyebrow">Error-code page template</span>
+            <span className="eyebrow">Manufacturer error-code record</span>
             <h1>{manufacturer.name} {errorCode.title}</h1>
             <p>{errorCode.summary}</p>
+            <ClaimSources
+              label="Meaning source"
+              sourceIds={errorCode.sourceIds}
+              sources={sourceRecords}
+            />
           </div>
         </header>
+
+        <section className="fact-grid" aria-label="Error-code record details">
+          <div>
+            <span>Source scope</span>
+            <strong>{errorCode.sourceScope}</strong>
+          </div>
+          <div>
+            <span>Source-grouped aliases</span>
+            <strong>
+              {errorCode.aliases.length ? errorCode.aliases.join(", ") : "None listed"}
+            </strong>
+          </div>
+          <div>
+            <span>Assigned model families</span>
+            <strong>{errorCode.modelFamilyIds.length}</strong>
+          </div>
+        </section>
+
+        <div className="notice notice-warning">
+          <strong>Model compatibility is not inferred.</strong>
+          <p>{errorCode.applicabilityNote}</p>
+        </div>
 
         {errorCode.isFictional ? (
           <div className="notice notice-warning">

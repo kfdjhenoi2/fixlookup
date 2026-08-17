@@ -5,6 +5,29 @@ const workerUrl = new URL("../dist/server/index.js", import.meta.url);
 workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
 const { default: worker } = await import(workerUrl.href);
 
+const problemPaths = [
+  "/dishwashers/problems/dishwasher-not-draining",
+  "/dishwashers/problems/dishwasher-not-filling-with-water",
+  "/dishwashers/problems/dishwasher-leaking",
+  "/dishwashers/problems/dishwasher-will-not-start",
+  "/dishwashers/problems/dishwasher-not-cleaning",
+  "/dishwashers/problems/dishwasher-not-drying",
+  "/dishwashers/problems/white-residue-on-dishes",
+  "/dishwashers/problems/dishwasher-tablet-not-dissolving",
+];
+
+const errorCodePaths = [
+  "/dishwashers/bosch/error-codes/e15",
+  "/dishwashers/bosch/error-codes/e24",
+  "/dishwashers/siemens/error-codes/e15",
+  "/dishwashers/electrolux/error-codes/i20",
+  "/dishwashers/electrolux/error-codes/i30",
+  "/dishwashers/samsung/error-codes/4c-4e",
+  "/dishwashers/samsung/error-codes/5c-5e",
+  "/dishwashers/samsung/error-codes/lc-le",
+  "/dishwashers/whirlpool/error-codes/f8e4",
+];
+
 function render(path = "/") {
   return worker.fetch(
     new Request(new URL(path, "http://localhost"), {
@@ -31,92 +54,146 @@ async function expectPage(path, patterns) {
   return html;
 }
 
-test("server-renders the finished homepage", async () => {
+test("server-renders the source-reviewed homepage", async () => {
   const html = await expectPage("/", [
     /<title>FixOrReplace/,
     /Find the right next step/,
     /Search by device, manufacturer, model, symptom, or error code/,
-    /Evidence before answers/,
+    /Source-reviewed guidance/,
+    /Bosch E15/,
   ]);
 
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
   assert.match(html, /application\/ld\+json/);
+  assert.doesNotMatch(html, /DEMO-01|Example Dishwasher 100|demo symptom/i);
 });
 
-test("renders the main category and manufacturer templates", async () => {
-  await expectPage("/dishwashers", [
+test("renders the category and manufacturer indexes", async () => {
+  const category = await expectPage("/dishwashers", [
     /Dishwasher troubleshooting/,
     /Choose the name on your appliance/,
-    /Bosch/,
-    /Samsung/,
+    /8(?:<!-- -->)? reviewed topics/,
+    /Dishwasher not draining or leaving standing water/,
   ]);
+  assert.ok((category.match(/Source verified/g) ?? []).length >= 8);
+
   await expectPage("/dishwashers/bosch", [
     /Bosch(?:<!-- -->)? dishwashers/,
-    /Example Dishwasher 100/,
-    /Error codes/,
-  ]);
-  await expectPage("/dishwashers/siemens", [
-    /Siemens(?:<!-- -->)? dishwashers/,
     /No verified models published yet/,
+    /E15/,
+    /E24/,
   ]);
+  await expectPage("/dishwashers/electrolux", [
+    /Electrolux(?:<!-- -->)? dishwashers/,
+    /i20/,
+    /C2/,
+    /i30/,
+  ]);
+  await expectPage("/dishwashers/samsung", [/4C \/ 4E/, /5C \/ 5E/, /LC \/ LE/]);
 });
 
-test("renders model, problem, error-code, and troubleshooter templates", async () => {
-  await expectPage("/dishwashers/bosch/models/example-dw-100", [
-    /Fictional model/,
-    /EXAMPLE-DW-100/,
-    /Linked troubleshooting guide/,
-    /Sources &amp; references/,
-  ]);
-  await expectPage("/dishwashers/problems/demo-not-starting", [
+test("renders shared guides with claim-level source links", async () => {
+  const drainage = await expectPage(problemPaths[0], [
     /Problem record/,
+    /Safe dishwasher drainage checks/,
     /Sources &amp; references/,
     /Related problems/,
+    /Accessed[\s\S]{0,80}2026-08-17/,
   ]);
-  const errorCode = await expectPage("/dishwashers/bosch/error-codes/demo-01", [
-    /DEMO-01/,
-    /This code has no real appliance meaning/,
-    /Continue on the problem guide/,
-    /href="\/dishwashers\/problems\/demo-not-starting"/,
-  ]);
-  assert.doesNotMatch(errorCode, /Write down the exact model identifier/);
-  await expectPage("/dishwashers/troubleshooter", [
-    /Interactive framework/,
-    /Is there an immediate safety concern/,
-  ]);
+  assert.match(drainage, /href="#source-source-bosch-not-draining"/);
+  assert.match(drainage, /id="source-source-bosch-not-draining"/);
+  assert.match(drainage, /Clean only the removable filter described in the manual/);
+  assert.match(drainage, /"@type":"TechArticle"/);
+
+  for (const path of problemPaths) {
+    const html = await expectPage(path, [
+      /Source verified/,
+      /Sources &amp; references/,
+      /class="claim-sources"/,
+    ]);
+    assert.doesNotMatch(html, /name="robots" content="noindex/);
+  }
 });
 
-test("serves technical SEO foundations", async () => {
-  const manufacturer = await expectPage("/dishwashers/bosch", [
-    /<title>Bosch dishwasher troubleshooting \| FixOrReplace<\/title>/,
-    /property="og:title" content="Bosch dishwasher troubleshooting \| FixOrReplace"/,
-    /rel="canonical" href="http:\/\/localhost:3000\/dishwashers\/bosch"/,
+test("renders canonical manufacturer code records without duplicate workflows", async () => {
+  const boschE15 = await expectPage(errorCodePaths[0], [
+    /Bosch(?:<!-- -->)? E15 error code/,
+    /safety switch detected water/,
+    /Model compatibility is not inferred/,
+    /Bosch US dishwasher support/,
+    /href="\/dishwashers\/problems\/dishwasher-leaking"/,
   ]);
-  assert.match(manufacturer, /name="robots" content="noindex, follow"/);
+  assert.doesNotMatch(boschE15, /Limit checks to accessible areas/);
+  assert.match(boschE15, /"@type":"TechArticle"/);
 
-  const demoRoutes = [
-    "/dishwashers/bosch/error-codes/demo-01",
-    "/dishwashers/bosch/models/example-dw-100",
-    "/dishwashers/problems/demo-not-starting",
-    "/dishwashers/troubleshooter",
+  await expectPage("/dishwashers/electrolux/error-codes/i20", [
+    /i20 drainage error/,
+    /C2, F2, AL6, 2 beeps, 2 LED flashes/,
+    /href="\/dishwashers\/problems\/dishwasher-not-draining"/,
+  ]);
+  await expectPage("/dishwashers/samsung/error-codes/4c-4e", [
+    /4C \/ 4E information code/,
+    /water-supply issue codes/,
+    /Assigned model families/,
+  ]);
+
+  for (const path of errorCodePaths) {
+    const html = await expectPage(path, [
+      /Source verified/,
+      /Model compatibility is not inferred/,
+      /Sources &amp; references/,
+      /Meaning source/,
+    ]);
+    assert.doesNotMatch(html, /name="robots" content="noindex/);
+  }
+});
+
+test("publishes unique metadata and canonical URLs for the complete cluster", async () => {
+  const routes = [
+    ...problemPaths,
+    ...errorCodePaths,
+    "/dishwashers/bosch",
+    "/dishwashers/siemens",
+    "/dishwashers/electrolux",
+    "/dishwashers/whirlpool",
+    "/dishwashers/samsung",
   ];
-  const demoPages = await Promise.all(
-    demoRoutes.map((route) =>
-      expectPage(route, [/name="robots" content="noindex, follow"/]),
-    ),
-  );
-  const [demoRecord] = demoPages;
-  assert.match(demoRecord, /property="og:image" content="http:\/\/localhost:3000\/og.png"/);
+  const titles = new Set();
+  const descriptions = new Set();
 
+  for (const path of routes) {
+    const html = await expectPage(path, [
+      new RegExp(`rel="canonical" href="http:\\/\\/localhost:3000${path.replaceAll("/", "\\/")}"`),
+      /property="og:title"/,
+      /property="og:description"/,
+    ]);
+    const title = html.match(/<title>(.*?)<\/title>/)?.[1];
+    const description = html.match(/<meta name="description" content="([^"]+)"/i)?.[1];
+    assert.ok(title, `${path} should have a title`);
+    assert.ok(description, `${path} should have a description`);
+    assert.ok(!titles.has(title), `${path} has duplicate title ${title}`);
+    assert.ok(!descriptions.has(description), `${path} has duplicate description`);
+    titles.add(title);
+    descriptions.add(description);
+  }
+
+  const troubleshooter = await expectPage("/dishwashers/troubleshooter", [
+    /Interactive framework/,
+    /name="robots" content="noindex, follow"/,
+  ]);
+  assert.match(troubleshooter, /No model compatibility is assumed/);
+});
+
+test("sitemap includes reviewed pages and excludes thin or unsupported routes", async () => {
   const sitemapResponse = await render("/sitemap.xml");
   assert.equal(sitemapResponse.status, 200);
   const sitemap = await sitemapResponse.text();
   assert.match(sitemap, /<urlset/);
-  assert.match(sitemap, /<loc>http:\/\/localhost:3000\/dishwashers<\/loc>/);
-  assert.doesNotMatch(
-    sitemap,
-    /\/dishwashers\/(bosch|siemens|electrolux|whirlpool|samsung|troubleshooter)|demo-01|example-dw-100|demo-not-starting/,
-  );
+  for (const path of [...problemPaths, ...errorCodePaths]) {
+    assert.match(sitemap, new RegExp(`<loc>http:\\/\\/localhost:3000${path.replaceAll("/", "\\/")}<\\/loc>`));
+  }
+  assert.doesNotMatch(sitemap, /\/dishwashers\/troubleshooter|\/models\//);
+  assert.equal((sitemap.match(/<url>/g) ?? []).length, 25);
 
   const robotsResponse = await render("/robots.txt");
   assert.equal(robotsResponse.status, 200);
@@ -125,13 +202,20 @@ test("serves technical SEO foundations", async () => {
   assert.match(robots, /Sitemap:/i);
 });
 
-test("unknown content records return a real not-found response", async () => {
-  const response = await render("/dishwashers/bosch/models/not-a-real-model");
-  assert.equal(response.status, 404);
-  const html = await response.text();
-  assert.match(html, /That troubleshooting record is not here/);
-  assert.match(html, /name="robots" content="noindex, nofollow"/);
-  assert.doesNotMatch(html, /rel="canonical"/);
+test("removed demo records and unknown content return a real not-found response", async () => {
+  for (const path of [
+    "/dishwashers/bosch/models/example-dw-100",
+    "/dishwashers/problems/demo-not-starting",
+    "/dishwashers/bosch/error-codes/demo-01",
+    "/dishwashers/bosch/models/not-a-real-model",
+  ]) {
+    const response = await render(path);
+    assert.equal(response.status, 404, `${path} should not resolve`);
+    const html = await response.text();
+    assert.match(html, /That troubleshooting record is not here/);
+    assert.match(html, /name="robots" content="noindex, nofollow"/);
+    assert.doesNotMatch(html, /rel="canonical"/);
+  }
 });
 
 test("all discoverable internal page links resolve", async () => {
@@ -158,5 +242,5 @@ test("all discoverable internal page links resolve", async () => {
     }
   }
 
-  assert.ok(visited.size >= 12, `expected a useful route crawl, saw ${visited.size}`);
+  assert.ok(visited.size >= 26, `expected the full linked cluster, saw ${visited.size}`);
 });

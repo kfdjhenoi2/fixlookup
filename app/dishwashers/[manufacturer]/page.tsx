@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: ManufacturerPageProps): Promi
 
   return createPageMetadata({
     title: `${manufacturer.name} dishwasher troubleshooting`,
-    description: `Browse structured ${manufacturer.name} dishwasher model, symptom, and error-code records.`,
+    description: `Browse source-reviewed ${manufacturer.name} dishwasher error-code records and shared troubleshooting guides.`,
     path: `/dishwashers/${manufacturer.slug}`,
     noIndex: !manufacturerHasIndexableContent(manufacturer.id),
   });
@@ -143,7 +143,10 @@ export default async function ManufacturerPage({ params }: ManufacturerPageProps
                       href={`/dishwashers/${manufacturer.slug}/error-codes/${errorCode.slug}`}
                       key={errorCode.id}
                     >
-                      <code>{errorCode.code}</code>
+                      <code>
+                        {errorCode.code}
+                        {errorCode.aliases[0] ? ` / ${errorCode.aliases[0]}` : ""}
+                      </code>
                       <div>
                         <strong>{errorCode.title}</strong>
                         <span>
@@ -173,12 +176,12 @@ export default async function ManufacturerPage({ params }: ManufacturerPageProps
                 The database keys records to exact identifiers and sources.
               </p>
               <Link className="text-link" href="/dishwashers/troubleshooter">
-                Use the demo framework →
+                Use the troubleshooting framework →
               </Link>
             </div>
             <div className="rail-card rail-card-muted">
-              <span className="eyebrow">Common demo records</span>
-              {problems.map((problem) => (
+              <span className="eyebrow">Shared problem guides</span>
+              {problems.slice(0, 5).map((problem) => (
                 <Link href={`/dishwashers/problems/${problem.slug}`} key={problem.id}>
                   {problem.title}
                   <span aria-hidden="true">→</span>
