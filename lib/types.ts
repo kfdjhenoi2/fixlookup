@@ -14,11 +14,13 @@ export type SourceType =
 export interface DeviceCategoryKnowledge {
   id: string;
   manufacturerIds: string[];
+  verificationStatus: VerificationStatus;
 }
 
 export interface ManufacturerKnowledge {
   id: string;
   categoryIds: string[];
+  verificationStatus: VerificationStatus;
 }
 
 export interface ModelFamilyKnowledge {
@@ -83,6 +85,7 @@ export interface TroubleshootingGuideKnowledge {
   safetyLevel: SafetyLevel;
   verificationStatus: VerificationStatus;
   lastReviewed: string | null;
+  reviewIntervalDays: number | null;
 }
 
 export interface SourceKnowledge {
@@ -92,6 +95,8 @@ export interface SourceKnowledge {
   url?: string;
   publishedAt?: string;
   accessedAt?: string;
+  lastReviewed: string | null;
+  reviewIntervalDays: number | null;
   verificationStatus: VerificationStatus;
 }
 
@@ -186,7 +191,6 @@ export interface SearchItem {
   type: "device" | "manufacturer" | "model" | "problem" | "errorCode";
   href: string;
   keywords: string[];
-  isDemo?: boolean;
 }
 
 export interface TroubleshooterOption {

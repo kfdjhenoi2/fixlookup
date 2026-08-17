@@ -13,6 +13,9 @@ import { getLocaleContent } from "./i18n";
 import type { Locale } from "./i18n/config";
 import { paths } from "./i18n/routing";
 import { formatMessage } from "./i18n/messages";
+import { isVerifiedForPublication } from "./publication.mjs";
+import { isIsoDate } from "./review";
+import { siteConfig } from "./site";
 import type {
   DeviceCategory,
   DeviceModel,
@@ -111,96 +114,131 @@ export function getContent(locale: Locale) {
     errorCodes.find((record) => record.manufacturerId === manufacturerId && record.slug === slug);
   const getGuideById = (id?: string) => guides.find((record) => record.id === id);
   const getSourcesByIds = (ids: string[]) => sources.filter((record) => ids.includes(record.id));
-  const getRelatedProblems = (problem: Problem) =>
-    problems.filter((record) => problem.relatedProblemIds.includes(record.id));
-
+  const hasReviewSchedule = (record: { lastReviewed: string | null; reviewIntervalDays: number | null }) =>
+    isIsoDate(record.lastReviewed) && Number.isInteger(record.reviewIntervalDays) && (record.reviewIntervalDays ?? 0) > 0;
   const hasVerifiedSources = (ids: string[]) =>
     ids.length > 0 && ids.every((id) => {
       const source = sources.find((record) => record.id === id);
-      return source?.verificationStatus === "verified" && source.type !== "editorial-placeholder";
+      return Boolean(source && isVerifiedForPublication(source) && source.type !== "editorial-placeholder" && hasReviewSchedule(source));
     });
-  const isGuideIndexable = (guide: TroubleshootingGuide) =>
-    guide.verificationStatus === "verified" && hasVerifiedSources(guide.sourceIds) &&
-    guide.steps.every((record) => hasVerifiedSources(record.sourceIds));
-  const isModelFamilyIndexable = (family: ModelFamily) =>
-    family.verificationStatus === "verified" && hasVerifiedSources(family.sourceIds);
+  const isGuideIndexable = (guide: TroubleshootingGuide) => {
+    const category = getCategoryById(guide.categoryId);
+    return isVerifiedForPublication(guide) && Boolean(category && isVerifiedForPublication(category)) &&
+      hasReviewSchedule(guide) && hasVerifiedSources(guide.sourceIds) &&
+      guide.steps.every((record) => hasVerifiedSources(record.sourceIds));
+  };
+  const isModelFamilyIndexable = (family: ModelFamily) => {
+    const category = getCategoryById(family.categoryId);
+    const manufacturer = getManufacturerById(family.manufacturerId);
+    return isVerifiedForPublication(family) &&
+      Boolean(category && isVerifiedForPublication(category)) &&
+      Boolean(manufacturer && isVerifiedForPublication(manufacturer)) &&
+      hasVerifiedSources(family.sourceIds);
+  };
   const isModelIndexable = (model: DeviceModel) => {
+    const category = getCategoryById(model.categoryId);
+    const manufacturer = getManufacturerById(model.manufacturerId);
     const family = modelFamilies.find((record) => record.id === model.familyId);
     const linkedGuides = model.guideIds.map((id) => getGuideById(id));
-    return model.verificationStatus === "verified" && !model.isFictional &&
+    return isVerifiedForPublication(model) &&
+      Boolean(category && isVerifiedForPublication(category)) &&
+      Boolean(manufacturer && isVerifiedForPublication(manufacturer)) &&
       hasVerifiedSources(model.sourceIds) && Boolean(family && isModelFamilyIndexable(family)) &&
       linkedGuides.every((guide) => Boolean(guide && isGuideIndexable(guide)));
   };
   const isProblemIndexable = (problem: Problem) => {
+    const category = getCategoryById(problem.categoryId);
     const guide = getGuideById(problem.guideId);
-    return problem.verificationStatus === "verified" && hasVerifiedSources(problem.sourceIds) &&
+    return isVerifiedForPublication(problem) && Boolean(category && isVerifiedForPublication(category)) && hasVerifiedSources(problem.sourceIds) &&
       Boolean(guide && isGuideIndexable(guide));
   };
   const isErrorCodeIndexable = (errorCode: ErrorCode) => {
+    const category = getCategoryById(errorCode.categoryId);
+    const manufacturer = getManufacturerById(errorCode.manufacturerId);
     const linkedFamilies = errorCode.modelFamilyIds.map((id) => modelFamilies.find((record) => record.id === id));
     const guide = getGuideById(errorCode.guideId);
-    return errorCode.verificationStatus === "verified" && !errorCode.isFictional &&
+    return isVerifiedForPublication(errorCode) &&
+      Boolean(category && isVerifiedForPublication(category)) &&
+      Boolean(manufacturer && isVerifiedForPublication(manufacturer)) &&
       hasVerifiedSources(errorCode.sourceIds) &&
       linkedFamilies.every((family) => Boolean(family && isModelFamilyIndexable(family))) &&
       (!errorCode.guideId || Boolean(guide && isGuideIndexable(guide)));
   };
-  const manufacturerHasIndexableContent = (manufacturerId: string) =>
-    models.some((model) => model.manufacturerId === manufacturerId && isModelIndexable(model)) ||
-    errorCodes.some((record) => record.manufacturerId === manufacturerId && isErrorCodeIndexable(record));
+  const getRelatedProblems = (problem: Problem) =>
+    problems.filter((record) => problem.relatedProblemIds.includes(record.id) && isProblemIndexable(record));
+  const manufacturerHasIndexableContent = (manufacturerId: string, categoryId?: string) => {
+    const manufacturer = getManufacturerById(manufacturerId);
+    return Boolean(manufacturer && isVerifiedForPublication(manufacturer) && (
+      models.some((model) => model.manufacturerId === manufacturerId && (!categoryId || model.categoryId === categoryId) && isModelIndexable(model)) ||
+      errorCodes.some((record) => record.manufacturerId === manufacturerId && (!categoryId || record.categoryId === categoryId) && isErrorCodeIndexable(record))
+    ));
+  };
+  const categoryHasIndexableContent = (categoryId: string) => {
+    const category = getCategoryById(categoryId);
+    return Boolean(category && isVerifiedForPublication(category) && (
+      problems.some((problem) => problem.categoryId === categoryId && isProblemIndexable(problem)) ||
+      manufacturers.some((manufacturer) => manufacturer.categoryIds.includes(categoryId) && manufacturerHasIndexableContent(manufacturer.id, categoryId))
+    ));
+  };
 
-  const category = required(deviceCategories[0], "first category");
   const searchItems: SearchItem[] = [
-    {
-      id: "search-dishwashers",
+    ...deviceCategories.filter((category) => categoryHasIndexableContent(category.id)).map((category) => ({
+      id: `search-${category.id}`,
       label: category.name,
       description: category.description,
-      type: "device",
+      type: "device" as const,
       href: paths.category(locale, category),
       keywords: [category.name, category.singularName, messages.ui.searchKeywordAppliance, messages.ui.searchKeywordDevice],
-    },
-    ...manufacturers.map((manufacturer) => ({
-      id: `search-${manufacturer.id}`,
-      label: formatMessage(messages.ui.searchManufacturerLabel, {
-        name: manufacturer.name,
-        category: category.name.toLocaleLowerCase(locale),
-      }),
-      description: manufacturer.overview,
-      type: "manufacturer" as const,
-      href: paths.manufacturer(locale, category, manufacturer),
-      keywords: [manufacturer.name, category.name, category.singularName, messages.ui.searchKeywordBrand],
     })),
-    ...models.map((model) => {
+    ...manufacturers.flatMap((manufacturer) => manufacturer.categoryIds.flatMap((categoryId) => {
+      const category = getCategoryById(categoryId);
+      if (!category || !manufacturerHasIndexableContent(manufacturer.id, category.id)) return [];
+      return [{
+        id: `search-${category.id}-${manufacturer.id}`,
+        label: formatMessage(messages.ui.searchManufacturerLabel, {
+          name: manufacturer.name,
+          category: category.name.toLocaleLowerCase(locale),
+        }),
+        description: manufacturer.overview,
+        type: "manufacturer" as const,
+        href: paths.manufacturer(locale, category, manufacturer),
+        keywords: [manufacturer.name, category.name, category.singularName, messages.ui.searchKeywordBrand],
+      }];
+    })),
+    ...models.filter(isModelIndexable).flatMap((model) => {
+      const category = getCategoryById(model.categoryId);
       const manufacturer = required(getManufacturerById(model.manufacturerId), model.manufacturerId);
-      return {
+      return category ? [{
         id: `search-${model.id}`,
         label: model.name,
         description: model.modelNumber,
         type: "model" as const,
         href: paths.model(locale, category, manufacturer, model),
         keywords: [model.modelNumber, model.name, category.singularName, messages.ui.searchKeywordModel],
-        isDemo: model.verificationStatus !== "verified" || model.isFictional,
-      };
+      }] : [];
     }),
-    ...problems.map((problem) => ({
-      id: `search-${problem.id}`,
-      label: problem.title,
-      description: problem.summary,
-      type: "problem" as const,
-      href: paths.problem(locale, category, problem),
-      keywords: [...problem.symptomLabels, category.singularName, messages.ui.searchKeywordProblem],
-      isDemo: problem.verificationStatus !== "verified",
-    })),
-    ...errorCodes.map((errorCode) => {
+    ...problems.filter(isProblemIndexable).flatMap((problem) => {
+      const category = getCategoryById(problem.categoryId);
+      return category ? [{
+        id: `search-${problem.id}`,
+        label: problem.title,
+        description: problem.summary,
+        type: "problem" as const,
+        href: paths.problem(locale, category, problem),
+        keywords: [...problem.symptomLabels, category.singularName, messages.ui.searchKeywordProblem],
+      }] : [];
+    }),
+    ...errorCodes.filter(isErrorCodeIndexable).flatMap((errorCode) => {
+      const category = getCategoryById(errorCode.categoryId);
       const manufacturer = required(getManufacturerById(errorCode.manufacturerId), errorCode.manufacturerId);
-      return {
+      return category ? [{
         id: `search-${errorCode.id}`,
         label: `${manufacturer.name} ${errorCode.code}`,
         description: errorCode.title,
         type: "errorCode" as const,
         href: paths.errorCode(locale, category, manufacturer, errorCode),
         keywords: [errorCode.code, ...errorCode.aliases, ...errorCode.signalLabels, manufacturer.name, category.singularName, messages.ui.searchKeywordErrorCode],
-        isDemo: errorCode.verificationStatus !== "verified" || errorCode.isFictional,
-      };
+      }] : [];
     }),
   ];
 
@@ -211,6 +249,7 @@ export function getContent(locale: Locale) {
     getModelBySlug, getProblemBySlug, getProblemById, getErrorCodeBySlug, getGuideById,
     getSourcesByIds, getRelatedProblems, isGuideIndexable, isModelFamilyIndexable,
     isModelIndexable, isProblemIndexable, isErrorCodeIndexable, manufacturerHasIndexableContent,
+    categoryHasIndexableContent,
   };
 }
 
@@ -287,9 +326,17 @@ function validateContent(content: Content) {
   unique("search IDs", content.searchItems, (record) => record.id);
   unique("troubleshooter node IDs", content.troubleshooterNodes, (record) => record.id);
 
-  if (content.deviceCategories.some((record) => record.slug === content.messages.routes.devices)) {
-    errors.push("a category slug conflicts with the localized devices route");
-  }
+  const reservedCategorySlugs = new Set([
+    content.messages.routes.devices,
+    content.messages.routes.about,
+    content.messages.routes.editorial,
+    content.messages.routes.safety,
+    content.messages.routes.contact,
+  ]);
+  content.deviceCategories.forEach((record) => {
+    if (reservedCategorySlugs.has(record.slug)) errors.push(`${record.id} uses a reserved top-level route slug`);
+  });
+  if (!categoryIds.has(siteConfig.primaryCategoryId)) errors.push(`missing primary category ${siteConfig.primaryCategoryId}`);
   const reservedManufacturerSlugs = new Set([
     content.messages.routes.problems,
     content.messages.routes.troubleshooter,
@@ -404,7 +451,10 @@ function validateContent(content: Content) {
       });
     });
     if (record.verificationStatus === "verified" && !content.isGuideIndexable(record)) errors.push(`${record.id} is verified but not indexable`);
-    if (record.verificationStatus === "verified" && !record.lastReviewed) errors.push(`${record.id} has no review date`);
+    if (record.verificationStatus === "verified" && !isIsoDate(record.lastReviewed)) errors.push(`${record.id} has no valid review date`);
+    if (record.verificationStatus === "verified" && (!Number.isInteger(record.reviewIntervalDays) || (record.reviewIntervalDays ?? 0) <= 0)) {
+      errors.push(`${record.id} has no valid review interval`);
+    }
   });
   content.sources.forEach((record) => {
     if (record.verificationStatus === "verified" && record.type === "editorial-placeholder") {
@@ -412,6 +462,12 @@ function validateContent(content: Content) {
     }
     if (record.verificationStatus === "verified" && (!record.url || !record.url.startsWith("https://"))) {
       errors.push(`${record.id} is verified without an HTTPS URL`);
+    }
+    if (record.verificationStatus === "verified" && !isIsoDate(record.lastReviewed)) {
+      errors.push(`${record.id} has no valid review date`);
+    }
+    if (record.verificationStatus === "verified" && (!Number.isInteger(record.reviewIntervalDays) || (record.reviewIntervalDays ?? 0) <= 0)) {
+      errors.push(`${record.id} has no valid review interval`);
     }
   });
   const referencedSourceIds = new Set([

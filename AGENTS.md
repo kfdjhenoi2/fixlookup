@@ -88,6 +88,10 @@ Technical claims must be traceable to sources.
 
 If reliable information cannot be found, omit the claim or mark the data as requiring review.
 
+Only records with `verificationStatus: "verified"`, valid source relationships, and complete review metadata may be publicly discoverable. `demo`, `needs-review`, and fictional records must remain unpublished: exclude them from routes, search, listings, related links, metadata, structured data, breadcrumbs, and sitemaps. Do not use `noindex` as the publication boundary.
+
+Verified guides and sources must carry a truthful `lastReviewed` date and a positive review interval so freshness can be checked on a schedule.
+
 ## Safety
 
 Do not provide unsafe DIY instructions.

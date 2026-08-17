@@ -12,8 +12,10 @@
     "dev:sites": "vinext dev",
     "build:sites": "vinext build",
     "test": "npm run build:sites && node --test tests/*.test.mjs",
+    "test:preview": "node scripts/run-preview-tests.mjs",
     "typecheck": "tsc --project tsconfig.check.json --noEmit",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "scan:secrets": "node scripts/scan-secrets.mjs"
   },
   "dependencies": {
     "next": "16.3.1",

@@ -13,10 +13,12 @@ import type {
 const categoryId = "category-dishwashers";
 const reviewed = "2026-08-17";
 const accessedAt = "2026-08-17";
+const reviewIntervalDays = 365;
 
 export const categoryKnowledge: DeviceCategoryKnowledge[] = [
   {
     id: categoryId,
+    verificationStatus: "verified",
     manufacturerIds: [
       "manufacturer-bosch",
       "manufacturer-siemens",
@@ -36,6 +38,7 @@ export const manufacturerKnowledge: ManufacturerKnowledge[] = [
 ].map((slug) => ({
   id: `manufacturer-${slug}`,
   categoryIds: [categoryId],
+  verificationStatus: "verified" as const,
 }));
 
 export const modelFamilyKnowledge: ModelFamilyKnowledge[] = [];
@@ -166,6 +169,7 @@ export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
     safetyLevel: "caution",
     verificationStatus: "verified",
     lastReviewed: reviewed,
+    reviewIntervalDays,
     sourceIds: ["source-bosch-not-draining", "source-bosch-e24", "source-electrolux-drain-i20", "source-whirlpool-not-draining", "source-samsung-water-codes"],
     steps: [
       step("drain-stop-for-hazards", ["source-whirlpool-not-draining"], "caution"),
@@ -183,6 +187,7 @@ export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
     safetyLevel: "caution",
     verificationStatus: "verified",
     lastReviewed: reviewed,
+    reviewIntervalDays,
     sourceIds: ["source-electrolux-inlet-i10", "source-whirlpool-not-filling", "source-samsung-water-codes"],
     steps: [
       step("fill-check-tap", ["source-electrolux-inlet-i10", "source-whirlpool-not-filling"], "user-safe"),
@@ -200,6 +205,7 @@ export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
     safetyLevel: "caution",
     verificationStatus: "verified",
     lastReviewed: reviewed,
+    reviewIntervalDays,
     sourceIds: ["source-bosch-e15", "source-siemens-error-codes", "source-electrolux-leaking", "source-electrolux-i30", "source-whirlpool-f8e4", "source-samsung-water-codes"],
     steps: [
       step("leak-stop-water", ["source-bosch-e15", "source-siemens-error-codes", "source-electrolux-i30", "source-whirlpool-f8e4"], "caution"),
@@ -217,6 +223,7 @@ export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
     safetyLevel: "caution",
     verificationStatus: "verified",
     lastReviewed: reviewed,
+    reviewIntervalDays,
     sourceIds: ["source-bosch-troubleshooting", "source-electrolux-not-starting", "source-whirlpool-not-starting"],
     steps: [
       step("start-record-state", ["source-bosch-troubleshooting"], "caution"),
@@ -234,6 +241,7 @@ export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
     safetyLevel: "user-safe",
     verificationStatus: "verified",
     lastReviewed: reviewed,
+    reviewIntervalDays,
     sourceIds: ["source-bosch-not-cleaning", "source-electrolux-not-cleaning", "source-whirlpool-not-cleaning"],
     steps: [
       step("clean-check-loading", ["source-bosch-not-cleaning", "source-whirlpool-not-cleaning"], "user-safe"),
@@ -251,6 +259,7 @@ export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
     safetyLevel: "user-safe",
     verificationStatus: "verified",
     lastReviewed: reviewed,
+    reviewIntervalDays,
     sourceIds: ["source-bosch-wet-dishes", "source-electrolux-not-drying", "source-whirlpool-not-drying"],
     steps: [
       step("dry-check-cycle", ["source-bosch-wet-dishes", "source-electrolux-not-drying", "source-whirlpool-not-drying"], "user-safe"),
@@ -268,6 +277,7 @@ export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
     safetyLevel: "user-safe",
     verificationStatus: "verified",
     lastReviewed: reviewed,
+    reviewIntervalDays,
     sourceIds: ["source-electrolux-white-residue", "source-whirlpool-dull-dishes"],
     steps: [
       step("residue-test-film", ["source-electrolux-white-residue", "source-whirlpool-dull-dishes"], "user-safe"),
@@ -285,6 +295,7 @@ export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
     safetyLevel: "user-safe",
     verificationStatus: "verified",
     lastReviewed: reviewed,
+    reviewIntervalDays,
     sourceIds: ["source-electrolux-tablet", "source-whirlpool-detergent-remains"],
     steps: [
       step("tablet-dry-dispenser", ["source-electrolux-tablet", "source-whirlpool-detergent-remains"], "user-safe"),
@@ -307,6 +318,8 @@ const source = (
   url,
   publishedAt,
   accessedAt,
+  lastReviewed: accessedAt,
+  reviewIntervalDays,
   verificationStatus: "verified",
 });
 

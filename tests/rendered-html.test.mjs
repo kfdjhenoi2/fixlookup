@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { shouldBlockIndexing, productionSiteOrigin } from "../lib/deployment.mjs";
+import { isVerifiedForPublication, verifiedForPublication } from "../lib/publication.mjs";
+import { createSecurityHeaders } from "../lib/security.mjs";
 
 const workerUrl = new URL("../dist/server/index.js", import.meta.url);
 workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
 const { default: worker } = await import(workerUrl.href);
-const expectedOrigin = "https://fixlookup.com";
+const expectedOrigin = productionSiteOrigin;
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const problemPaths = [
@@ -38,9 +41,17 @@ const manufacturerPaths = [
   "/en/dishwashers/samsung/",
 ];
 
+const governancePaths = [
+  "/en/about/",
+  "/en/editorial-policy/",
+  "/en/safety/",
+  "/en/contact/",
+];
+
 const indexablePaths = [
   "/en/",
   "/en/devices/",
+  ...governancePaths,
   "/en/dishwashers/",
   ...manufacturerPaths,
   ...problemPaths,
@@ -69,6 +80,42 @@ function jsonLdRecords(html) {
     .map((match) => JSON.parse(match[1]));
 }
 
+test("publication helper admits only reviewed, non-fictional records", () => {
+  const records = [
+    { id: "published", verificationStatus: "verified", isFictional: false },
+    { id: "demo", verificationStatus: "demo", isFictional: true },
+    { id: "review", verificationStatus: "needs-review", isFictional: false },
+    { id: "fictional", verificationStatus: "verified", isFictional: true },
+  ];
+  assert.equal(isVerifiedForPublication(records[0]), true);
+  assert.deepEqual(verifiedForPublication(records).map((record) => record.id), ["published"]);
+});
+
+test("deployment policy blocks previews without changing the production origin", () => {
+  assert.equal(productionSiteOrigin, "https://fixlookup.com");
+  assert.equal(shouldBlockIndexing({ VERCEL_ENV: "production" }), false);
+  assert.equal(shouldBlockIndexing({ VERCEL_ENV: "preview" }), true);
+  assert.equal(shouldBlockIndexing({ VERCEL_ENV: "development" }), true);
+  assert.equal(shouldBlockIndexing({ FIXLOOKUP_NOINDEX: "1" }), true);
+  assert.equal(shouldBlockIndexing({}), false);
+});
+
+test("security policy includes browser hardening and preview robots protection", () => {
+  const production = Object.fromEntries(createSecurityHeaders().map(({ key, value }) => [key, value]));
+  assert.match(production["Content-Security-Policy"], /default-src 'self'/);
+  assert.match(production["Content-Security-Policy"], /object-src 'none'/);
+  assert.match(production["Content-Security-Policy"], /frame-ancestors 'none'/);
+  assert.equal(production["X-Content-Type-Options"], "nosniff");
+  assert.equal(production["X-Frame-Options"], "DENY");
+  assert.equal(production["Referrer-Policy"], "strict-origin-when-cross-origin");
+  assert.match(production["Permissions-Policy"], /camera=\(\)/);
+  assert.match(production["Strict-Transport-Security"], /^max-age=/);
+  assert.equal(production["X-Robots-Tag"], undefined);
+
+  const preview = Object.fromEntries(createSecurityHeaders({ blockIndexing: true }).map(({ key, value }) => [key, value]));
+  assert.equal(preview["X-Robots-Tag"], "noindex, nofollow, noarchive");
+});
+
 test("root and trailing-slash redirects normalize to one locale-aware URL", async () => {
   for (const [path, destination] of [
     ["/", "/en/"],
@@ -87,7 +134,7 @@ test("root and trailing-slash redirects normalize to one locale-aware URL", asyn
     /aria-label="FixLookup home"/,
     /<span>FixLookup<\/span>/,
     /Find the right next step/,
-    /Search by device, manufacturer, model, symptom, or error code/,
+    /Search for a manufacturer, symptom, or error code/,
     /href="\/en\/dishwashers\/bosch\/e15\/"/,
   ]);
   assert.doesNotMatch(home, /href="\/(?:devices|dishwashers)(?:\/|")/);
@@ -127,6 +174,19 @@ test("renders locale-aware category, manufacturer, and search links", async () =
   await expectPage("/en/dishwashers/samsung/", [/4C \/ 4E/, /5C \/ 5E/, /LC \/ LE/]);
 });
 
+test("trust pages explain the editorial, safety, correction, and contact boundaries", async () => {
+  const expectations = new Map([
+    ["/en/about/", [/About FixLookup/, /source-aware troubleshooting/]],
+    ["/en/editorial-policy/", [/How FixLookup reviews and publishes technical information/, /What verified means/]],
+    ["/en/safety/", [/Safe next steps come before complete instructions/, /Professional-only work/]],
+    ["/en/contact/", [/Help keep the record accurate/, /corrections@fixlookup\.com/, /must be activated and tested/]],
+  ]);
+  for (const [path, patterns] of expectations) {
+    const html = await expectPage(path, [...patterns, /"@type":"WebPage"/]);
+    assert.doesNotMatch(html, /name="robots" content="noindex/);
+  }
+});
+
 test("renders shared guides with claim-level source links and safety labels", async () => {
   const drainage = await expectPage(problemPaths[0], [
     /Shared problem guide/,
@@ -134,6 +194,8 @@ test("renders shared guides with claim-level source links and safety labels", as
     /Sources &amp; references/,
     /Related problems/,
     /Accessed[\s\S]{0,80}2026-08-17/,
+    /Last reviewed[\s\S]{0,80}2026-08-17/,
+    /Review due[\s\S]{0,80}2027-08-17/,
   ]);
   assert.match(drainage, /href="#source-source-bosch-not-draining"/);
   assert.match(drainage, /id="source-source-bosch-not-draining"/);
@@ -182,6 +244,7 @@ test("all indexable pages have unique locale-aware metadata and valid Open Graph
     assert.ok(html.includes(`property="og:image" content="${expectedOrigin}/og.png"`));
     assert.doesNotMatch(html, /hreflang="(?:fi|de|es|fr)"/);
     assert.doesNotMatch(html, /FixOrReplace|Fix Or Replace|fix-or-replace/i);
+    assert.doesNotMatch(html, /Demo record|Source review needed|fictional template/i);
     assert.doesNotMatch(html, /name="robots" content="noindex/);
     assert.equal((html.match(/rel="canonical"/g) ?? []).length, 1, `${path} should have one canonical`);
     assert.equal((html.match(/hreflang="en"/g) ?? []).length, 1, `${path} should have one English alternate`);
@@ -203,7 +266,7 @@ test("all indexable pages have unique locale-aware metadata and valid Open Graph
     descriptions.add(description);
   }
 
-  const troubleshooter = await expectPage("/en/dishwashers/troubleshooter/", [/Interactive framework/, /name="robots" content="noindex, follow"/]);
+  const troubleshooter = await expectPage("/en/dishwashers/troubleshooter/", [/Safety and information checklist/, /name="robots" content="noindex, nofollow, nocache"/]);
   assert.match(troubleshooter, /No model compatibility is assumed/);
   assert.doesNotMatch(troubleshooter, /property="og:locale" content="en"/);
 });
@@ -253,7 +316,26 @@ test("sitemap contains exactly the real indexable English URLs", async () => {
   assert.match(sitemap, /hreflang="en"/);
   assert.match(sitemap, /hreflang="x-default"/);
   assert.doesNotMatch(sitemap, /hreflang="(?:fi|de|es|fr)"|\/troubleshooter\/|\/error-codes\/|\/models\//);
+  assert.doesNotMatch(sitemap, /demo|needs-review|fictional/i);
+  assert.equal((sitemap.match(/<lastmod>2026-08-17<\/lastmod>/g) ?? []).length, indexablePaths.length);
   locations.forEach((location) => assert.ok(location.startsWith(`${expectedOrigin}/en/`)));
+});
+
+test("manifest and generated application icons use production brand metadata", async () => {
+  const response = await render("/manifest.webmanifest");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /application\/manifest\+json/);
+  const manifest = await response.json();
+  assert.equal(manifest.name, "FixLookup");
+  assert.equal(manifest.short_name, "FixLookup");
+  assert.equal(manifest.start_url, "/en/");
+  assert.deepEqual(manifest.icons.map((icon) => icon.src), ["/icon", "/apple-icon"]);
+
+  for (const path of ["/icon", "/apple-icon"]) {
+    const icon = await render(path);
+    assert.equal(icon.status, 200, `${path} should be generated`);
+    assert.match(icon.headers.get("content-type") ?? "", /^image\/png/);
+  }
 });
 
 test("legacy and unknown records return real 404s without competing metadata", async () => {
@@ -283,7 +365,7 @@ test("all discoverable locale-prefixed internal links resolve", async () => {
     const contentType = response.headers.get("content-type") ?? "";
     if (!contentType.startsWith("text/html")) continue;
     const html = await response.text();
-    const hrefs = [...html.matchAll(/href="(\/[^"#?]*)"/g)]
+    const hrefs = [...html.matchAll(/<a\b[^>]*href="(\/[^"#?]*)"/g)]
       .map((match) => match[1])
       .filter((href) => !href.startsWith("/_next"));
     for (const href of hrefs) {
@@ -291,5 +373,5 @@ test("all discoverable locale-prefixed internal links resolve", async () => {
       if (!visited.has(href) && !pending.includes(href)) pending.push(href);
     }
   }
-  assert.ok(visited.size >= 26, `expected the full linked cluster, saw ${visited.size}`);
+  assert.ok(visited.size >= 30, `expected the full linked cluster, saw ${visited.size}`);
 });

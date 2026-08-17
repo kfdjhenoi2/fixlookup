@@ -1,4 +1,5 @@
 import type { SourceReference } from "@/lib/types";
+import { reviewDueDate } from "@/lib/review";
 import { VerificationBadge } from "./status-badge";
 
 export function ClaimSources({
@@ -71,6 +72,12 @@ export function SourceList({
                 {source.publishedAt ? <>{" · "}{messages.published} <time dateTime={source.publishedAt}>{source.publishedAt}</time></> : null}
                 {source.accessedAt ? <>{" · "}{messages.accessed} <time dateTime={source.accessedAt}>{source.accessedAt}</time></> : null}
               </p>
+              {source.lastReviewed && source.reviewIntervalDays ? (
+                <p>
+                  {messages.lastReviewed} <time dateTime={source.lastReviewed}>{source.lastReviewed}</time>
+                  {" · "}{messages.reviewDue} <time dateTime={reviewDueDate(source.lastReviewed, source.reviewIntervalDays)}>{reviewDueDate(source.lastReviewed, source.reviewIntervalDays)}</time>
+                </p>
+              ) : null}
               {source.note ? <p className="source-note">{source.note}</p> : null}
             </div>
             <VerificationBadge status={source.verificationStatus} labels={verificationLabels} />

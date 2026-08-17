@@ -18,9 +18,11 @@ interface PageProps { params: Promise<{ locale: string; section: string; segment
 export function generateStaticParams() {
   return supportedLocales.flatMap((locale) => {
     const content = getCachedContent(locale);
-    return content.deviceCategories.flatMap((category) => [
+    return content.deviceCategories.filter((category) => content.categoryHasIndexableContent(category.id)).flatMap((category) => [
       { locale, section: category.slug, segment: content.messages.routes.troubleshooter },
-      ...content.manufacturers.filter((record) => record.categoryIds.includes(category.id)).map((manufacturer) => ({ locale, section: category.slug, segment: manufacturer.slug })),
+      ...content.manufacturers
+        .filter((record) => record.categoryIds.includes(category.id) && content.manufacturerHasIndexableContent(record.id, category.id))
+        .map((manufacturer) => ({ locale, section: category.slug, segment: manufacturer.slug })),
     ]);
   });
 }
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!isSupportedLocale(locale)) return {};
   const content = getCachedContent(locale);
   const category = content.getCategoryBySlug(section);
-  if (!category) return {};
+  if (!category || !content.categoryHasIndexableContent(category.id)) return {};
   if (segment === content.messages.routes.troubleshooter) {
     const page = content.messages.pages.troubleshooter;
     return createPageMetadata({
@@ -43,14 +45,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     });
   }
   const manufacturer = content.getManufacturerBySlug(segment);
-  if (!manufacturer || !manufacturer.categoryIds.includes(category.id)) return {};
+  if (!manufacturer || !manufacturer.categoryIds.includes(category.id) || !content.manufacturerHasIndexableContent(manufacturer.id, category.id)) return {};
   const page = content.messages.pages.manufacturer;
   return createPageMetadata({
     locale,
     title: formatMessage(page.metaTitle, { name: manufacturer.name }),
     description: formatMessage(page.metaDescription, { name: manufacturer.name }),
     path: paths.manufacturer(locale, category, manufacturer),
-    noIndex: !content.manufacturerHasIndexableContent(manufacturer.id),
     pathForLocale: (candidate) => {
       const candidateContent = getCachedContent(candidate);
       const localizedCategory = candidateContent.getCategoryById(category.id);
@@ -65,10 +66,10 @@ export default async function SegmentPage({ params }: PageProps) {
   if (!isSupportedLocale(locale)) notFound();
   const content = getCachedContent(locale);
   const category = content.getCategoryBySlug(section);
-  if (!category) notFound();
+  if (!category || !content.categoryHasIndexableContent(category.id)) notFound();
   if (segment === content.messages.routes.troubleshooter) return <TroubleshooterPage locale={locale} category={category} content={content} />;
   const manufacturer = content.getManufacturerBySlug(segment);
-  if (!manufacturer || !manufacturer.categoryIds.includes(category.id)) notFound();
+  if (!manufacturer || !manufacturer.categoryIds.includes(category.id) || !content.manufacturerHasIndexableContent(manufacturer.id, category.id)) notFound();
   return <ManufacturerPage locale={locale} category={category} manufacturer={manufacturer} content={content} />;
 }
 
@@ -76,9 +77,8 @@ type Content = ReturnType<typeof getCachedContent>;
 
 function ManufacturerPage({ locale, category, manufacturer, content }: { locale: Locale; category: Content["deviceCategories"][number]; manufacturer: Content["manufacturers"][number]; content: Content }) {
   const page = content.messages.pages.manufacturer;
-  const hasIndexableContent = content.manufacturerHasIndexableContent(manufacturer.id);
-  const models = content.models.filter((record) => record.manufacturerId === manufacturer.id && (!hasIndexableContent || content.isModelIndexable(record)));
-  const codes = content.errorCodes.filter((record) => record.manufacturerId === manufacturer.id && (!hasIndexableContent || content.isErrorCodeIndexable(record)));
+  const models = content.models.filter((record) => record.manufacturerId === manufacturer.id && record.categoryId === category.id && content.isModelIndexable(record));
+  const codes = content.errorCodes.filter((record) => record.manufacturerId === manufacturer.id && record.categoryId === category.id && content.isErrorCodeIndexable(record));
   return (
     <main className="page-main" id="main-content">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "CollectionPage", name: formatMessage(page.metaTitle, { name: manufacturer.name }), inLanguage: locale, url: absoluteUrl(paths.manufacturer(locale, category, manufacturer)), description: manufacturer.overview }} />

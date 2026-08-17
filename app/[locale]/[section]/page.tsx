@@ -6,11 +6,11 @@ import { JsonLd } from "@/components/json-ld";
 import { SearchBox } from "@/components/search-box";
 import { VerificationBadge } from "@/components/status-badge";
 import { getCachedContent } from "@/lib/content";
-import { isSupportedLocale, supportedLocales } from "@/lib/i18n/config";
+import { isSupportedLocale, supportedLocales, type Locale } from "@/lib/i18n/config";
 import { formatMessage } from "@/lib/i18n/messages";
 import { paths } from "@/lib/i18n/routing";
 import { createPageMetadata } from "@/lib/metadata";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 
 interface PageProps { params: Promise<{ locale: string; section: string }> }
 
@@ -19,7 +19,13 @@ export function generateStaticParams() {
     const content = getCachedContent(locale);
     return [
       { locale, section: content.messages.routes.devices },
-      ...content.deviceCategories.map((category) => ({ locale, section: category.slug })),
+      { locale, section: content.messages.routes.about },
+      { locale, section: content.messages.routes.editorial },
+      { locale, section: content.messages.routes.safety },
+      { locale, section: content.messages.routes.contact },
+      ...content.deviceCategories
+        .filter((category) => content.categoryHasIndexableContent(category.id))
+        .map((category) => ({ locale, section: category.slug })),
     ];
   });
 }
@@ -32,8 +38,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const page = content.messages.pages.devices;
     return createPageMetadata({ locale, title: page.metaTitle, description: page.metaDescription, path: paths.devices(locale), pathForLocale: (candidate) => paths.devices(candidate) });
   }
+  const governance = getGovernancePage(content, locale, section);
+  if (governance) {
+    return createPageMetadata({
+      locale,
+      title: governance.page.metaTitle,
+      description: governance.page.metaDescription,
+      path: governance.path,
+      pathForLocale: (candidate) => getGovernancePage(getCachedContent(candidate), candidate, getCachedContent(candidate).messages.routes[governance.id])?.path,
+    });
+  }
   const category = content.getCategoryBySlug(section);
-  if (!category) return {};
+  if (!category || !content.categoryHasIndexableContent(category.id)) return {};
   const page = content.messages.pages.category;
   return createPageMetadata({
     locale,
@@ -51,6 +67,8 @@ export default async function SectionPage({ params }: PageProps) {
   const { locale, section } = await params;
   if (!isSupportedLocale(locale)) notFound();
   const content = getCachedContent(locale);
+  const governance = getGovernancePage(content, locale, section);
+  if (governance) return <GovernancePage locale={locale} content={content} governance={governance} />;
   return section === content.messages.routes.devices
     ? <DevicesPage locale={locale} content={content} />
     : <CategoryPage locale={locale} section={section} content={content} />;
@@ -65,7 +83,7 @@ function DevicesPage({ locale, content }: { locale: typeof supportedLocales[numb
       <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={paths.devices(locale)} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: page.breadcrumb }]} />
       <header className="page-hero page-hero-compact"><span className="eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><p>{page.intro}</p></header>
       <section className="section-block section-block-first"><div className="card-grid">
-        {content.deviceCategories.map((category) => (
+        {content.deviceCategories.filter((category) => content.categoryHasIndexableContent(category.id)).map((category) => (
           <Link className="content-card category-card" href={paths.category(locale, category)} key={category.id}>
             <div className="category-card-top"><span className="device-monogram device-monogram-small" aria-hidden="true">DW</span><span className="badge badge-live">{page.available}</span></div>
             <h2>{category.name}</h2><p>{category.description}</p>
@@ -83,9 +101,10 @@ function DevicesPage({ locale, content }: { locale: typeof supportedLocales[numb
 
 function CategoryPage({ locale, section, content }: { locale: typeof supportedLocales[number]; section: string; content: Content }) {
   const category = content.getCategoryBySlug(section);
-  if (!category) notFound();
+  if (!category || !content.categoryHasIndexableContent(category.id)) notFound();
   const page = content.messages.pages.category;
-  const manufacturers = content.manufacturers.filter((record) => record.categoryIds.includes(category.id));
+  const manufacturers = content.manufacturers.filter((record) =>
+    record.categoryIds.includes(category.id) && content.manufacturerHasIndexableContent(record.id, category.id));
   const problems = content.problems.filter((record) => record.categoryId === category.id && content.isProblemIndexable(record));
   return (
     <main className="page-main" id="main-content">
@@ -103,6 +122,106 @@ function CategoryPage({ locale, section, content }: { locale: typeof supportedLo
           <div className="record-list">{problems.map((problem) => <Link href={paths.problem(locale, category, problem)} key={problem.id}><div><VerificationBadge status={problem.verificationStatus} labels={content.messages.verificationLabels} /><h3>{problem.title}</h3><p>{problem.summary}</p></div><span className="record-arrow" aria-hidden="true">→</span></Link>)}</div>
         </section>
         <section className="framework-callout"><div><span className="eyebrow eyebrow-light">{page.unsure}</span><h2>{page.frameworkTitle}</h2><p>{page.frameworkBody}</p></div><Link className="button-light" href={paths.troubleshooter(locale, category)}>{page.start}</Link></section>
+      </div>
+    </main>
+  );
+}
+
+type GovernancePageId = "about" | "editorial" | "safety" | "contact";
+
+interface GovernancePageDefinition {
+  id: GovernancePageId;
+  path: string;
+  page: Record<string, string>;
+  sections: Array<{ title: string; body: string }>;
+}
+
+function getGovernancePage(content: Content, locale: Locale, section: string): GovernancePageDefinition | undefined {
+  const { routes, pages } = content.messages;
+  const definitions: GovernancePageDefinition[] = [
+    {
+      id: "about", path: paths.about(locale), page: pages.about,
+      sections: [
+        { title: pages.about.purposeTitle, body: pages.about.purposeBody },
+        { title: pages.about.approachTitle, body: pages.about.approachBody },
+        { title: pages.about.independenceTitle, body: pages.about.independenceBody },
+      ],
+    },
+    {
+      id: "editorial", path: paths.editorial(locale), page: pages.editorial,
+      sections: [
+        { title: pages.editorial.sourcesTitle, body: pages.editorial.sourcesBody },
+        { title: pages.editorial.verifiedTitle, body: pages.editorial.verifiedBody },
+        { title: pages.editorial.compatibilityTitle, body: pages.editorial.compatibilityBody },
+        { title: pages.editorial.freshnessTitle, body: pages.editorial.freshnessBody },
+        { title: pages.editorial.correctionsTitle, body: pages.editorial.correctionsBody },
+      ],
+    },
+    {
+      id: "safety", path: paths.safety(locale), page: pages.safety,
+      sections: [
+        { title: pages.safety.userTitle, body: pages.safety.userBody },
+        { title: pages.safety.stopTitle, body: pages.safety.stopBody },
+        { title: pages.safety.professionalTitle, body: pages.safety.professionalBody },
+        { title: pages.safety.limitsTitle, body: pages.safety.limitsBody },
+      ],
+    },
+    {
+      id: "contact", path: paths.contact(locale), page: pages.contact,
+      sections: [
+        { title: pages.contact.reportTitle, body: pages.contact.reportBody },
+        { title: pages.contact.privacyTitle, body: pages.contact.privacyBody },
+        { title: pages.contact.scopeTitle, body: pages.contact.scopeBody },
+      ],
+    },
+  ];
+  const routeById: Record<GovernancePageId, string> = {
+    about: routes.about,
+    editorial: routes.editorial,
+    safety: routes.safety,
+    contact: routes.contact,
+  };
+  return definitions.find((definition) => routeById[definition.id] === section);
+}
+
+function GovernancePage({ locale, content, governance }: { locale: Locale; content: Content; governance: GovernancePageDefinition }) {
+  const page = governance.page;
+  return (
+    <main className="page-main governance-page" id="main-content">
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: page.metaTitle,
+        description: page.metaDescription,
+        inLanguage: locale,
+        url: absoluteUrl(governance.path),
+        dateModified: siteConfig.governanceLastReviewed,
+      }} />
+      <div className="site-shell">
+        <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={governance.path} items={[
+          { label: content.messages.ui.home, href: paths.home(locale) },
+          { label: page.breadcrumb },
+        ]} />
+        <header className="page-hero governance-hero">
+          <span className="eyebrow">{page.eyebrow}</span>
+          <h1>{page.title}</h1>
+          <p>{page.intro}</p>
+        </header>
+        <div className="governance-grid">
+          {governance.sections.map((record) => (
+            <section className="governance-section" key={record.title}>
+              <h2>{record.title}</h2>
+              <p>{record.body}</p>
+            </section>
+          ))}
+          {governance.id === "contact" ? (
+            <section className="governance-section governance-contact">
+              <span className="eyebrow">{page.addressLabel}</span>
+              <a href={`mailto:${page.address}`}>{page.address}</a>
+              <p>{page.addressNote}</p>
+            </section>
+          ) : null}
+        </div>
       </div>
     </main>
   );

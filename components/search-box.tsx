@@ -13,12 +13,14 @@ export function SearchBox({
   messages,
   typeLabels,
   compact = false,
+  anchorId,
 }: {
   items: SearchItem[];
   locale: Locale;
   messages: Record<string, string>;
   typeLabels: Record<SearchItem["type"], string>;
   compact?: boolean;
+  anchorId?: string;
 }) {
   const [query, setQuery] = useState("");
   const router = useRouter();
@@ -47,7 +49,7 @@ export function SearchBox({
   }
 
   return (
-    <div className={`search-module ${compact ? "search-module-compact" : ""}`}>
+    <div className={`search-module ${compact ? "search-module-compact" : ""}`} id={anchorId}>
       <form className="search-form" role="search" onSubmit={handleSubmit}>
         <span className="search-symbol" aria-hidden="true" />
         <label className="sr-only" htmlFor={inputId}>{messages.searchLabel}</label>
@@ -77,7 +79,7 @@ export function SearchBox({
                       <small>{result.description}</small>
                     </span>
                     <span className="result-type">
-                      {result.isDemo ? messages.demoPrefix : ""}{typeLabels[result.type]}
+                      {typeLabels[result.type]}
                     </span>
                   </Link>
                 </li>

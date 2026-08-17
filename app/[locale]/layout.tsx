@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCachedContent } from "@/lib/content";
 import { isSupportedLocale, openGraphLocales, supportedLocales } from "@/lib/i18n/config";
 import { absoluteUrl, siteConfig } from "@/lib/site";
+import { shouldBlockIndexing } from "@/lib/deployment.mjs";
 import "../globals.css";
 
 export const dynamicParams = false;
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description: messages.ui.siteDescription,
     applicationName: siteConfig.name,
     category: "technology",
+    robots: shouldBlockIndexing() ? { index: false, follow: false, nocache: true } : undefined,
     openGraph: {
       type: "website",
       siteName: siteConfig.name,
@@ -44,7 +46,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const { locale } = await params;
   if (!isSupportedLocale(locale)) notFound();
   const content = getCachedContent(locale);
-  const category = content.deviceCategories[0];
+  const category = content.getCategoryById(siteConfig.primaryCategoryId);
+  if (!category || !content.categoryHasIndexableContent(category.id)) notFound();
   return (
     <html lang={locale}>
       <body>

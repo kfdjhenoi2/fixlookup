@@ -1633,6 +1633,58 @@ a.content-card:hover {
   box-shadow: 0 0 0 0.25rem rgba(214, 139, 48, 0.12);
 }
 
+.recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.governance-hero {
+  max-width: 52rem;
+}
+
+.governance-grid {
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 5rem;
+}
+
+.governance-section {
+  padding: 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+
+.governance-section h2 {
+  margin: 0 0 0.55rem;
+  color: var(--green-deep);
+  font-size: 1.15rem;
+}
+
+.governance-section p {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.governance-contact {
+  border-color: var(--line-strong);
+  background: var(--mint-pale);
+}
+
+.governance-contact a {
+  display: inline-block;
+  margin-bottom: 0.55rem;
+  color: var(--green-deep);
+  font-family: var(--mono);
+  font-weight: 760;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 @media (min-width: 36rem) {
   .site-shell {
     width: min(100% - 3rem, 72rem);
@@ -1798,6 +1850,10 @@ a.content-card:hover {
 
   .troubleshooter-card {
     transform: rotate(0.25deg);
+  }
+
+  .governance-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

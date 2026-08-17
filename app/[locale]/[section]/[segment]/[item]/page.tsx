@@ -20,8 +20,8 @@ export function generateStaticParams() {
   return supportedLocales.flatMap((locale) => {
     const content = getCachedContent(locale);
     return content.deviceCategories.flatMap((category) => [
-      ...content.problems.filter((problem) => problem.categoryId === category.id).map((problem) => ({ locale, section: category.slug, segment: content.messages.routes.problems, item: problem.slug })),
-      ...content.errorCodes.filter((code) => code.categoryId === category.id).flatMap((code) => {
+      ...content.problems.filter((problem) => problem.categoryId === category.id && content.isProblemIndexable(problem)).map((problem) => ({ locale, section: category.slug, segment: content.messages.routes.problems, item: problem.slug })),
+      ...content.errorCodes.filter((code) => code.categoryId === category.id && content.isErrorCodeIndexable(code)).flatMap((code) => {
         const manufacturer = content.getManufacturerById(code.manufacturerId);
         return manufacturer ? [{ locale, section: category.slug, segment: manufacturer.slug, item: code.slug }] : [];
       }),
@@ -37,14 +37,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!category) return {};
   if (segment === content.messages.routes.problems) {
     const problem = content.getProblemBySlug(item);
-    if (!problem || problem.categoryId !== category.id) return {};
+    if (!problem || problem.categoryId !== category.id || !content.isProblemIndexable(problem)) return {};
     const page = content.messages.pages.problem;
     return createPageMetadata({
       locale,
       title: formatMessage(page.metaTitle, { title: problem.title }),
       description: formatMessage(page.metaDescription, { summary: problem.summary }),
       path: paths.problem(locale, category, problem),
-      noIndex: !content.isProblemIndexable(problem),
       openGraphType: "article",
       pathForLocale: (candidate) => {
         const candidateContent = getCachedContent(candidate);
@@ -56,14 +55,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
   const manufacturer = content.getManufacturerBySlug(segment);
   const code = manufacturer && content.getErrorCodeBySlug(manufacturer.id, item);
-  if (!manufacturer || !code || code.categoryId !== category.id) return {};
+  if (!manufacturer || !code || code.categoryId !== category.id || !content.isErrorCodeIndexable(code)) return {};
   const page = content.messages.pages.error;
   return createPageMetadata({
     locale,
     title: formatMessage(page.metaTitle, { name: manufacturer.name, code: code.code }),
     description: formatMessage(page.metaDescription, { name: manufacturer.name, code: code.code }),
     path: paths.errorCode(locale, category, manufacturer, code),
-    noIndex: !content.isErrorCodeIndexable(code),
     openGraphType: "article",
     pathForLocale: (candidate) => {
       const candidateContent = getCachedContent(candidate);
@@ -85,12 +83,12 @@ export default async function ItemPage({ params }: PageProps) {
   if (!category) notFound();
   if (segment === content.messages.routes.problems) {
     const problem = content.getProblemBySlug(item);
-    if (!problem || problem.categoryId !== category.id) notFound();
+    if (!problem || problem.categoryId !== category.id || !content.isProblemIndexable(problem)) notFound();
     return <ProblemPage locale={locale} category={category} problem={problem} content={content} />;
   }
   const manufacturer = content.getManufacturerBySlug(segment);
   const code = manufacturer && content.getErrorCodeBySlug(manufacturer.id, item);
-  if (!manufacturer || !code || code.categoryId !== category.id) notFound();
+  if (!manufacturer || !code || code.categoryId !== category.id || !content.isErrorCodeIndexable(code)) notFound();
   return <ErrorPage locale={locale} category={category} manufacturer={manufacturer} code={code} content={content} />;
 }
 

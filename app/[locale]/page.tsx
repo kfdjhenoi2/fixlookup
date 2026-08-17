@@ -29,12 +29,21 @@ export default async function Home({ params }: PageProps) {
   const { locale } = await params;
   if (!isSupportedLocale(locale)) notFound();
   const content = getCachedContent(locale);
-  const { messages, manufacturers, problems, searchItems } = content;
+  const { messages, searchItems } = content;
   const page = messages.pages.home;
-  const category = content.deviceCategories[0];
-  const bosch = content.getManufacturerById("manufacturer-bosch")!;
-  const drain = content.getProblemById("problem-dishwasher-not-draining")!;
-  const e15 = content.errorCodes.find((record) => record.id === "error-bosch-e15")!;
+  const category = content.getCategoryById(siteConfig.primaryCategoryId);
+  if (!category || !content.categoryHasIndexableContent(category.id)) notFound();
+  const manufacturers = content.manufacturers.filter((record) =>
+    record.categoryIds.includes(category.id) && content.manufacturerHasIndexableContent(record.id, category.id));
+  const problems = content.problems.filter((record) =>
+    record.categoryId === category.id && content.isProblemIndexable(record));
+  const exampleManufacturer = manufacturers.find((record) => record.id === "manufacturer-bosch") ?? manufacturers[0];
+  const exampleProblem = problems.find((record) => record.id === "problem-dishwasher-not-draining") ?? problems[0];
+  const publishedCodes = content.errorCodes.filter((record) =>
+    record.categoryId === category.id && content.isErrorCodeIndexable(record));
+  const exampleCode = publishedCodes.find((record) => record.id === "error-bosch-e15") ?? publishedCodes[0];
+  const codeManufacturer = exampleCode ? content.getManufacturerById(exampleCode.manufacturerId) : undefined;
+  if (!exampleManufacturer || !exampleProblem || !exampleCode || !codeManufacturer) notFound();
 
   return (
     <main id="main-content">
@@ -52,12 +61,12 @@ export default async function Home({ params }: PageProps) {
             <span className="eyebrow eyebrow-light">{page.eyebrow}</span>
             <h1>{page.title}</h1>
             <p>{page.intro}</p>
-            <SearchBox items={searchItems} locale={locale} messages={messages.ui} typeLabels={messages.searchTypeLabels} />
+            <SearchBox items={searchItems} locale={locale} messages={messages.ui} typeLabels={messages.searchTypeLabels} anchorId="search" />
             <div className="search-examples" aria-label={page.examplesAria}>
               <span>{page.try}</span>
-              <Link href={paths.manufacturer(locale, category, bosch)}>{page.exampleBrand}</Link>
-              <Link href={paths.problem(locale, category, drain)}>{page.exampleProblem}</Link>
-              <Link href={paths.errorCode(locale, category, bosch, e15)}>{page.exampleCode}</Link>
+              <Link href={paths.manufacturer(locale, category, exampleManufacturer)}>{page.exampleBrand}</Link>
+              <Link href={paths.problem(locale, category, exampleProblem)}>{page.exampleProblem}</Link>
+              <Link href={paths.errorCode(locale, category, codeManufacturer, exampleCode)}>{page.exampleCode}</Link>
             </div>
           </div>
           <aside className="hero-proof" aria-label={page.commitmentsAria}>

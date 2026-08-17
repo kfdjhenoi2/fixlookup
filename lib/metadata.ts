@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { openGraphLocales, type Locale } from "./i18n/config";
 import { localizedAlternates } from "./i18n/routing";
 import { absoluteUrl, siteConfig } from "./site";
+import { shouldBlockIndexing } from "./deployment.mjs";
 
 interface PageMetadataOptions {
   locale: Locale;
@@ -23,6 +24,7 @@ export function createPageMetadata({
   openGraphType = "website",
 }: PageMetadataOptions): Metadata {
   const socialTitle = `${title} | ${siteConfig.name}`;
+  const preventIndexing = noIndex || shouldBlockIndexing();
   return {
     title,
     description,
@@ -30,7 +32,7 @@ export function createPageMetadata({
       canonical: path,
       languages: localizedAlternates(pathForLocale),
     },
-    robots: noIndex ? { index: false, follow: true } : undefined,
+    robots: preventIndexing ? { index: false, follow: false, nocache: true } : undefined,
     openGraph: {
       type: openGraphType,
       siteName: siteConfig.name,

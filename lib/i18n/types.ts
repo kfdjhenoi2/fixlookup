@@ -16,6 +16,10 @@ export interface LocaleContent {
     problems: string;
     models: string;
     troubleshooter: string;
+    about: string;
+    editorial: string;
+    safety: string;
+    contact: string;
   };
   categories: Record<string, CategoryTranslation>;
   manufacturers: Record<string, ManufacturerTranslation>;

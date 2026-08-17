@@ -19,6 +19,10 @@ export const paths = {
     withTrailingSlash([locale, category.slug, manufacturer.slug, errorCode.slug]),
   troubleshooter: (locale: Locale, category: DeviceCategory) =>
     withTrailingSlash([locale, category.slug, getLocaleContent(locale).routes.troubleshooter]),
+  about: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.about]),
+  editorial: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.editorial]),
+  safety: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.safety]),
+  contact: (locale: Locale) => withTrailingSlash([locale, getLocaleContent(locale).routes.contact]),
 };
 
 export function localizedAlternates(pathForLocale: (locale: Locale) => string | undefined) {

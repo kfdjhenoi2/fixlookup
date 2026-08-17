@@ -15,7 +15,7 @@ interface PageProps { params: Promise<{ locale: string; section: string; segment
 export function generateStaticParams() {
   return supportedLocales.flatMap((locale) => {
     const content = getCachedContent(locale);
-    return content.models.flatMap((model) => {
+    return content.models.filter(content.isModelIndexable).flatMap((model) => {
       const category = content.getCategoryById(model.categoryId);
       const manufacturer = content.getManufacturerById(model.manufacturerId);
       return category && manufacturer ? [{ locale, section: category.slug, segment: manufacturer.slug, item: content.messages.routes.models, model: model.slug }] : [];
@@ -30,14 +30,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const category = content.getCategoryBySlug(route.section);
   const manufacturer = content.getManufacturerBySlug(route.segment);
   const model = manufacturer && content.getModelBySlug(manufacturer.id, route.model);
-  if (!category || !manufacturer || !model || route.item !== content.messages.routes.models || model.categoryId !== category.id) return {};
+  if (!category || !manufacturer || !model || route.item !== content.messages.routes.models || model.categoryId !== category.id || !content.isModelIndexable(model)) return {};
   const page = content.messages.pages.model;
   return createPageMetadata({
     locale: route.locale,
     title: formatMessage(page.metaTitle, { name: model.name }),
     description: formatMessage(page.metaDescription, { name: model.name }),
     path: paths.model(route.locale, category, manufacturer, model),
-    noIndex: !content.isModelIndexable(model),
     pathForLocale: (candidate) => {
       const candidateContent = getCachedContent(candidate);
       const localizedCategory = candidateContent.getCategoryById(category.id);
@@ -56,7 +55,7 @@ export default async function ModelPage({ params }: PageProps) {
   const category = content.getCategoryBySlug(route.section);
   const manufacturer = content.getManufacturerBySlug(route.segment);
   const model = manufacturer && content.getModelBySlug(manufacturer.id, route.model);
-  if (!category || !manufacturer || !model || route.item !== content.messages.routes.models || model.categoryId !== category.id) notFound();
+  if (!category || !manufacturer || !model || route.item !== content.messages.routes.models || model.categoryId !== category.id || !content.isModelIndexable(model)) notFound();
   const page = content.messages.pages.model;
   const family = content.modelFamilies.find((record) => record.id === model.familyId);
   const sources = content.getSourcesByIds(model.sourceIds);

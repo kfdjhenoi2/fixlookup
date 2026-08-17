@@ -27,6 +27,10 @@ export function SiteFooter({
           <Link href={paths.devices(locale)}>{messages.footerBrowseDevices}</Link>
           <Link href={paths.category(locale, category)}>{messages.navDishwashers}</Link>
           <Link href={paths.troubleshooter(locale, category)}>{messages.footerTryFramework}</Link>
+          <Link href={paths.about(locale)}>{messages.footerAbout}</Link>
+          <Link href={paths.editorial(locale)}>{messages.footerEditorial}</Link>
+          <Link href={paths.safety(locale)}>{messages.footerSafety}</Link>
+          <Link href={paths.contact(locale)}>{messages.footerContact}</Link>
         </nav>
         <div className="footer-status">
           <span className="status-dot" aria-hidden="true" />
