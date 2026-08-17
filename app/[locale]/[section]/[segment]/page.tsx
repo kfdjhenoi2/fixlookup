@@ -83,7 +83,7 @@ function ManufacturerPage({ locale, category, manufacturer, content }: { locale:
     <main className="page-main" id="main-content">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "CollectionPage", name: formatMessage(page.metaTitle, { name: manufacturer.name }), inLanguage: locale, url: absoluteUrl(paths.manufacturer(locale, category, manufacturer)), description: manufacturer.overview }} />
       <div className="site-shell">
-        <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: category.name, href: paths.category(locale, category) }, { label: manufacturer.name }]} />
+        <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={paths.manufacturer(locale, category, manufacturer)} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: category.name, href: paths.category(locale, category) }, { label: manufacturer.name }]} />
         <header className="page-hero manufacturer-hero"><div><span className="eyebrow">{page.eyebrow}</span><h1>{formatMessage(page.title, { name: manufacturer.name })}</h1><p>{manufacturer.overview}</p></div><div className="manufacturer-monogram" aria-hidden="true">{manufacturer.name.slice(0, 2).toUpperCase()}</div></header>
         <div className="content-layout"><div>
           <section className="section-block section-block-first" aria-labelledby="models-heading">
@@ -107,7 +107,7 @@ function TroubleshooterPage({ locale, category, content }: { locale: Locale; cat
   const page = content.messages.pages.troubleshooter;
   return (
     <main className="page-main troubleshooter-page" id="main-content"><div className="site-shell">
-      <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: category.name, href: paths.category(locale, category) }, { label: page.breadcrumb }]} />
+      <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={paths.troubleshooter(locale, category)} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: category.name, href: paths.category(locale, category) }, { label: page.breadcrumb }]} />
       <div className="troubleshooter-layout">
         <header className="troubleshooter-intro"><span className="eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><p>{page.intro}</p><div className="trust-note"><span aria-hidden="true">i</span><p><strong>{page.boundaryTitle}</strong>{" "}{page.boundaryBody}</p></div></header>
         <Troubleshooter nodes={content.troubleshooterNodes} messages={content.messages.ui} />

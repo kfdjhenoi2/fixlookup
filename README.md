@@ -1,6 +1,6 @@
-# FixOrReplace
+# FixLookup
 
-FixOrReplace is a source-aware troubleshooting index for household appliances and consumer devices. The MVP focuses on a deliberately small dishwasher cluster: eight shared problem guides and nine manufacturer error-code records backed by primary sources.
+FixLookup is a source-aware troubleshooting index for household appliances and consumer devices. The MVP focuses on a deliberately small dishwasher cluster: eight shared problem guides and nine manufacturer error-code records backed by primary sources.
 
 ## Architecture
 
@@ -23,7 +23,7 @@ npm install
 npm run dev
 ```
 
-Set `NEXT_PUBLIC_SITE_URL` to the canonical site origin before a production build. The local fallback is `http://localhost:3000`.
+The canonical origin is pinned to `https://fixlookup.com` so local and preview builds cannot publish competing SEO URLs.
 
 ## Quality checks
 

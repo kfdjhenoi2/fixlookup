@@ -1,8 +1,8 @@
-# FixOrReplace
+# FixLookup
 
 ## Mission
 
-Build FixOrReplace into a trustworthy, structured and eventually largely autonomous troubleshooting database for household appliances and consumer devices.
+Build FixLookup into a trustworthy, structured and eventually largely autonomous troubleshooting database for household appliances and consumer devices.
 
 Long-term goal:
 

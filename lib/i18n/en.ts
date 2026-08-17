@@ -295,9 +295,9 @@ export const en = {
   },
   ui: {
     siteDescription: "Structured, source-aware troubleshooting for household appliances and consumer devices.",
-    defaultTitle: "FixOrReplace — Appliance troubleshooting, with evidence",
+    defaultTitle: "FixLookup — Appliance troubleshooting, with evidence",
     skipToContent: "Skip to content",
-    homeAria: "FixOrReplace home",
+    homeAria: "FixLookup home",
     primaryNavigation: "Primary navigation",
     footerNavigation: "Footer navigation",
     navDevices: "Devices",
@@ -343,7 +343,7 @@ export const en = {
     startOver: "Start over",
     notFoundTitle: "Page not found",
     notFoundBody: "This page is not available in the selected language.",
-    socialImageAlt: "FixOrReplace — Evidence before answers",
+    socialImageAlt: "FixLookup — Evidence before answers",
   },
   pages: {
     home: {
@@ -351,7 +351,7 @@ export const en = {
       metaDescription: "Structured, source-aware troubleshooting for household appliances.",
       eyebrow: "Evidence before answers",
       title: "Find the right next step — not another guess.",
-      intro: "Search by device, manufacturer, model, symptom, or error code. FixOrReplace keeps sources, safety, and uncertainty visible.",
+      intro: "Search by device, manufacturer, model, symptom, or error code. FixLookup keeps sources, safety, and uncertainty visible.",
       examplesAria: "Example searches",
       try: "Try:",
       exampleBrand: "Bosch dishwasher",
@@ -389,7 +389,7 @@ export const en = {
     },
     devices: {
       metaTitle: "Browse devices",
-      metaDescription: "Browse the household device categories currently covered by FixOrReplace.",
+      metaDescription: "Browse the household device categories currently covered by FixLookup.",
       breadcrumb: "Devices",
       eyebrow: "Device library",
       title: "Browse troubleshooting by device",
@@ -442,7 +442,7 @@ export const en = {
     },
     model: {
       metaTitle: "{name} dishwasher",
-      metaDescription: "Review the structured FixOrReplace record for {name}, including source scope and linked troubleshooting guidance.",
+      metaDescription: "Review the structured FixLookup record for {name}, including source scope and linked troubleshooting guidance.",
       eyebrow: "Model record",
       identity: "Identity",
       modelNumber: "Model number",
@@ -486,7 +486,7 @@ export const en = {
     },
     troubleshooter: {
       metaTitle: "Interactive dishwasher troubleshooter",
-      metaDescription: "Try the FixOrReplace safety-first interactive troubleshooting framework.",
+      metaDescription: "Try the FixLookup safety-first interactive troubleshooting framework.",
       breadcrumb: "Troubleshooter",
       eyebrow: "Interactive framework",
       title: "Get oriented before you act.",

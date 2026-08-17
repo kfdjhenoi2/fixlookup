@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { DeviceCategory } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
 import { paths } from "@/lib/i18n/routing";
+import { siteConfig } from "@/lib/site";
 
 export function SiteFooter({
   locale,
@@ -17,8 +18,8 @@ export function SiteFooter({
       <div className="site-shell footer-grid">
         <div>
           <Link className="brand footer-brand" href={paths.home(locale)}>
-            <span className="brand-mark" aria-hidden="true">F/R</span>
-            <span>FixOrReplace</span>
+            <span className="brand-mark" aria-hidden="true">F/L</span>
+            <span>{siteConfig.name}</span>
           </Link>
           <p className="footer-note">{messages.footerNote}</p>
         </div>

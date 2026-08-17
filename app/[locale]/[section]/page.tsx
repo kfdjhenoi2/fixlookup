@@ -62,7 +62,7 @@ function DevicesPage({ locale, content }: { locale: typeof supportedLocales[numb
   const page = content.messages.pages.devices;
   return (
     <main className="page-main" id="main-content"><div className="site-shell">
-      <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: page.breadcrumb }]} />
+      <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={paths.devices(locale)} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: page.breadcrumb }]} />
       <header className="page-hero page-hero-compact"><span className="eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><p>{page.intro}</p></header>
       <section className="section-block section-block-first"><div className="card-grid">
         {content.deviceCategories.map((category) => (
@@ -91,7 +91,7 @@ function CategoryPage({ locale, section, content }: { locale: typeof supportedLo
     <main className="page-main" id="main-content">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "CollectionPage", name: page.title, inLanguage: locale, url: absoluteUrl(paths.category(locale, category)), description: category.description }} />
       <div className="site-shell">
-        <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: content.messages.ui.navDevices, href: paths.devices(locale) }, { label: category.name }]} />
+        <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={paths.category(locale, category)} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: content.messages.ui.navDevices, href: paths.devices(locale) }, { label: category.name }]} />
         <header className="category-hero"><div><span className="eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><p>{page.intro}</p></div><div className="category-code" aria-hidden="true">DW / 01</div></header>
         <SearchBox items={content.searchItems} locale={locale} messages={content.messages.ui} typeLabels={content.messages.searchTypeLabels} compact />
         <section className="section-block" aria-labelledby="manufacturers-heading">

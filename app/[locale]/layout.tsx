@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCachedContent } from "@/lib/content";
-import { isSupportedLocale, supportedLocales } from "@/lib/i18n/config";
+import { isSupportedLocale, openGraphLocales, supportedLocales } from "@/lib/i18n/config";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import "../globals.css";
 
@@ -19,14 +19,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { messages } = getCachedContent(locale);
   return {
     metadataBase: new URL(siteConfig.url),
-    title: { default: messages.ui.defaultTitle, template: "%s | FixOrReplace" },
+    title: { default: messages.ui.defaultTitle, template: `%s | ${siteConfig.name}` },
     description: messages.ui.siteDescription,
     applicationName: siteConfig.name,
     category: "technology",
     openGraph: {
       type: "website",
       siteName: siteConfig.name,
-      locale,
+      locale: openGraphLocales[locale],
       title: messages.ui.defaultTitle,
       description: messages.ui.siteDescription,
       images: [{ url: absoluteUrl("/og.png"), width: 1731, height: 909, alt: messages.ui.socialImageAlt }],

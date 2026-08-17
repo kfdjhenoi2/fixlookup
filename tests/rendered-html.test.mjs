@@ -4,6 +4,8 @@ import test from "node:test";
 const workerUrl = new URL("../dist/server/index.js", import.meta.url);
 workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
 const { default: worker } = await import(workerUrl.href);
+const expectedOrigin = "https://fixlookup.com";
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const problemPaths = [
   "/en/dishwashers/problems/dishwasher-not-draining/",
@@ -28,6 +30,23 @@ const errorCodePaths = [
   "/en/dishwashers/whirlpool/f8e4/",
 ];
 
+const manufacturerPaths = [
+  "/en/dishwashers/bosch/",
+  "/en/dishwashers/siemens/",
+  "/en/dishwashers/electrolux/",
+  "/en/dishwashers/whirlpool/",
+  "/en/dishwashers/samsung/",
+];
+
+const indexablePaths = [
+  "/en/",
+  "/en/devices/",
+  "/en/dishwashers/",
+  ...manufacturerPaths,
+  ...problemPaths,
+  ...errorCodePaths,
+];
+
 function render(path = "/") {
   return worker.fetch(
     new Request(new URL(path, "http://localhost"), { headers: { accept: "text/html" } }),
@@ -45,13 +64,28 @@ async function expectPage(path, patterns) {
   return html;
 }
 
-test("root redirects to the default locale and only supported locales resolve", async () => {
-  const root = await render("/");
-  assert.equal(root.status, 308);
-  assert.equal(root.headers.get("location"), "/en/");
+function jsonLdRecords(html) {
+  return [...html.matchAll(/<script type="application\/ld\+json">([^<]+)<\/script>/g)]
+    .map((match) => JSON.parse(match[1]));
+}
+
+test("root and trailing-slash redirects normalize to one locale-aware URL", async () => {
+  for (const [path, destination] of [
+    ["/", "/en/"],
+    ["/en", "/en/"],
+    ["/en/devices", "/en/devices/"],
+    ["/en/dishwashers", "/en/dishwashers/"],
+    ["/en/dishwashers/bosch/e15", "/en/dishwashers/bosch/e15/"],
+  ]) {
+    const response = await render(path);
+    assert.equal(response.status, 308, `${path} should normalize permanently`);
+    assert.equal(response.headers.get("location"), destination);
+  }
 
   const home = await expectPage("/en/", [
     /<html lang="en">/,
+    /aria-label="FixLookup home"/,
+    /<span>FixLookup<\/span>/,
     /Find the right next step/,
     /Search by device, manufacturer, model, symptom, or error code/,
     /href="\/en\/dishwashers\/bosch\/e15\/"/,
@@ -61,7 +95,21 @@ test("root redirects to the default locale and only supported locales resolve", 
   for (const path of ["/fi/", "/de/", "/zz/", "/dishwashers/"]) {
     const response = await render(path);
     assert.equal(response.status, 404, `${path} must not be published`);
+    const body = await response.text();
+    assert.doesNotMatch(body, /rel="canonical"|property="og:url"/);
   }
+});
+
+test("robots allows crawling and advertises one canonical sitemap", async () => {
+  const response = await render("/robots.txt");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/plain\b/i);
+  const robots = await response.text();
+  assert.match(robots, /^User-Agent:\s*\*$/im);
+  assert.match(robots, /^Allow:\s*\/$/im);
+  assert.match(robots, new RegExp(`^Sitemap:\\s*${escapeRegExp(expectedOrigin)}/sitemap\\.xml$`, "im"));
+  assert.doesNotMatch(robots, /^Disallow:/im);
+  assert.equal((robots.match(/^Sitemap:/gim) ?? []).length, 1);
 });
 
 test("renders locale-aware category, manufacturer, and search links", async () => {
@@ -79,7 +127,7 @@ test("renders locale-aware category, manufacturer, and search links", async () =
   await expectPage("/en/dishwashers/samsung/", [/4C \/ 4E/, /5C \/ 5E/, /LC \/ LE/]);
 });
 
-test("renders shared guides with claim-level source links", async () => {
+test("renders shared guides with claim-level source links and safety labels", async () => {
   const drainage = await expectPage(problemPaths[0], [
     /Shared problem guide/,
     /Safe dishwasher drainage checks/,
@@ -90,11 +138,12 @@ test("renders shared guides with claim-level source links", async () => {
   assert.match(drainage, /href="#source-source-bosch-not-draining"/);
   assert.match(drainage, /id="source-source-bosch-not-draining"/);
   assert.match(drainage, /Clean only the removable filter described in the manual/);
-  assert.match(drainage, /"@type":"TechArticle"/);
 
   for (const path of problemPaths) {
     const html = await expectPage(path, [/Source verified/, /Sources &amp; references/, /class="claim-sources"/]);
     assert.doesNotMatch(html, /name="robots" content="noindex/);
+    assert.equal((html.match(/class="claim-sources"/g) ?? []).length, 4, `${path} should cite each step`);
+    assert.ok((html.match(/safety-(?:user-safe|caution|professional-only)/g) ?? []).length >= 5, `${path} should retain guide and step safety labels`);
   }
 });
 
@@ -107,7 +156,6 @@ test("manufacturer code pages reuse canonical guides rather than duplicate steps
     /href="\/en\/dishwashers\/problems\/dishwasher-leaking\/"/,
   ]);
   assert.doesNotMatch(boschE15, /Limit checks to accessible areas/);
-  assert.match(boschE15, /"@type":"TechArticle"/);
 
   await expectPage("/en/dishwashers/electrolux/i20/", [/i20 drainage error/, /C2, F2, AL6, 2 beeps, 2 LED flashes/, /dishwasher-not-draining/]);
   await expectPage("/en/dishwashers/samsung/4c-4e/", [/4C \/ 4E information code/, /water-supply issue codes/]);
@@ -117,19 +165,34 @@ test("manufacturer code pages reuse canonical guides rather than duplicate steps
   }
 });
 
-test("metadata uses locale-prefixed canonicals and only real language alternates", async () => {
-  const routes = ["/en/", "/en/devices/", "/en/dishwashers/", ...problemPaths, ...errorCodePaths];
+test("all indexable pages have unique locale-aware metadata and valid Open Graph tags", async () => {
   const titles = new Set();
   const descriptions = new Set();
-  for (const path of routes) {
+  for (const path of indexablePaths) {
     const html = await expectPage(path, [
-      new RegExp(`rel="canonical" href="http:\\/\\/localhost:3000${path.replaceAll("/", "\\/")}"`),
       /hreflang="en"/,
       /hreflang="x-default"/,
+      /<meta name="application-name" content="FixLookup"/,
       /property="og:title"/,
       /property="og:description"/,
+      /property="og:site_name" content="FixLookup"/,
+      /property="og:locale" content="en_US"/,
     ]);
+    assert.ok(html.includes(`rel="canonical" href="${expectedOrigin}${path}"`));
+    assert.ok(html.includes(`property="og:image" content="${expectedOrigin}/og.png"`));
     assert.doesNotMatch(html, /hreflang="(?:fi|de|es|fr)"/);
+    assert.doesNotMatch(html, /FixOrReplace|Fix Or Replace|fix-or-replace/i);
+    assert.doesNotMatch(html, /name="robots" content="noindex/);
+    assert.equal((html.match(/rel="canonical"/g) ?? []).length, 1, `${path} should have one canonical`);
+    assert.equal((html.match(/hreflang="en"/g) ?? []).length, 1, `${path} should have one English alternate`);
+    assert.equal((html.match(/hreflang="x-default"/g) ?? []).length, 1, `${path} should have one x-default alternate`);
+    assert.ok(html.includes(`property="og:url" content="${expectedOrigin}${path}"`));
+    if (problemPaths.includes(path) || errorCodePaths.includes(path)) {
+      assert.match(html, /property="og:type" content="article"/);
+    } else {
+      assert.match(html, /property="og:type" content="website"/);
+    }
+
     const title = html.match(/<title>(.*?)<\/title>/)?.[1];
     const description = html.match(/<meta name="description" content="([^"]+)"/i)?.[1];
     assert.ok(title, `${path} should have a title`);
@@ -142,23 +205,58 @@ test("metadata uses locale-prefixed canonicals and only real language alternates
 
   const troubleshooter = await expectPage("/en/dishwashers/troubleshooter/", [/Interactive framework/, /name="robots" content="noindex, follow"/]);
   assert.match(troubleshooter, /No model compatibility is assumed/);
+  assert.doesNotMatch(troubleshooter, /property="og:locale" content="en"/);
 });
 
-test("sitemap contains only indexed English routes and valid alternates", async () => {
+test("breadcrumbs expose visible and machine-readable canonical hierarchies", async () => {
+  for (const path of indexablePaths.filter((candidate) => candidate !== "/en/")) {
+    const html = await expectPage(path, [/aria-label="Breadcrumb"/, /"@type":"BreadcrumbList"/]);
+    const breadcrumbs = jsonLdRecords(html).find((record) => record["@type"] === "BreadcrumbList");
+    assert.ok(breadcrumbs, `${path} should have BreadcrumbList data`);
+    assert.ok(breadcrumbs.itemListElement.length >= 2, `${path} should have a useful hierarchy`);
+    assert.equal(breadcrumbs.itemListElement.at(-1).item, `${expectedOrigin}${path}`);
+    breadcrumbs.itemListElement.forEach((item, index) => {
+      assert.equal(item.position, index + 1);
+      assert.ok(item.item.startsWith(`${expectedOrigin}/en/`));
+    });
+  }
+});
+
+test("structured data stays tied to canonical pages and cited primary sources", async () => {
+  const category = await expectPage("/en/dishwashers/", [/"@type":"CollectionPage"/, /"inLanguage":"en"/]);
+  assert.ok(category.includes(`"url":"${expectedOrigin}/en/dishwashers/"`));
+
+  for (const path of [...problemPaths, ...errorCodePaths]) {
+    const html = await expectPage(path, [
+      /"@type":"TechArticle"/,
+      /"inLanguage":"en"/,
+      /"author":\{"@type":"Organization","name":"FixLookup"/,
+      /"publisher":\{"@type":"Organization","name":"FixLookup"/,
+      /"dateModified":"2026-08-17"/,
+      /"isBasedOn":\["https:\/\//,
+    ]);
+    assert.ok(html.includes(`"url":"${expectedOrigin}${path}"`));
+    assert.ok(html.includes(`"mainEntityOfPage":"${expectedOrigin}${path}"`));
+  }
+});
+
+test("sitemap contains exactly the real indexable English URLs", async () => {
   const response = await render("/sitemap.xml");
   assert.equal(response.status, 200);
   const sitemap = await response.text();
-  for (const path of [...problemPaths, ...errorCodePaths]) {
-    assert.match(sitemap, new RegExp(`<loc>http:\\/\\/localhost:3000${path.replaceAll("/", "\\/")}<\\/loc>`));
+  for (const path of indexablePaths) {
+    assert.ok(sitemap.includes(`<loc>${expectedOrigin}${path}</loc>`));
   }
-  assert.equal((sitemap.match(/<url>/g) ?? []).length, 25);
+  const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+  assert.equal(locations.length, indexablePaths.length);
+  assert.equal(new Set(locations).size, locations.length, "sitemap URLs must be unique");
   assert.match(sitemap, /hreflang="en"/);
   assert.match(sitemap, /hreflang="x-default"/);
-  assert.doesNotMatch(sitemap, /hreflang="(?:fi|de|es|fr)"|\/dishwashers\/[^<]*error-codes|\/models\//);
-  assert.doesNotMatch(sitemap, /<loc>http:\/\/localhost:3000\/(?!en\/)/);
+  assert.doesNotMatch(sitemap, /hreflang="(?:fi|de|es|fr)"|\/troubleshooter\/|\/error-codes\/|\/models\//);
+  locations.forEach((location) => assert.ok(location.startsWith(`${expectedOrigin}/en/`)));
 });
 
-test("legacy and unknown records do not compete with localized pages", async () => {
+test("legacy and unknown records return real 404s without competing metadata", async () => {
   for (const path of [
     "/dishwashers/bosch/error-codes/e15/",
     "/en/dishwashers/bosch/error-codes/e15/",
@@ -168,6 +266,8 @@ test("legacy and unknown records do not compete with localized pages", async () 
   ]) {
     const response = await render(path);
     assert.equal(response.status, 404, `${path} should not resolve`);
+    const html = await response.text();
+    assert.doesNotMatch(html, /rel="canonical"|property="og:url"/);
   }
 });
 

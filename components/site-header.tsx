@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { DeviceCategory } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
 import { paths } from "@/lib/i18n/routing";
+import { siteConfig } from "@/lib/site";
 
 export function SiteHeader({
   locale,
@@ -16,8 +17,8 @@ export function SiteHeader({
     <header className="site-header">
       <div className="site-shell header-inner">
         <Link className="brand" href={paths.home(locale)} aria-label={messages.homeAria}>
-          <span className="brand-mark" aria-hidden="true">F/R</span>
-          <span>FixOrReplace</span>
+          <span className="brand-mark" aria-hidden="true">F/L</span>
+          <span>{siteConfig.name}</span>
         </Link>
         <nav className="primary-nav" aria-label={messages.primaryNavigation}>
           <Link href={paths.devices(locale)}>{messages.navDevices}</Link>

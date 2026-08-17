@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import type { Locale } from "./i18n/config";
+import { openGraphLocales, type Locale } from "./i18n/config";
 import { localizedAlternates } from "./i18n/routing";
-import { absoluteUrl } from "./site";
+import { absoluteUrl, siteConfig } from "./site";
 
 interface PageMetadataOptions {
   locale: Locale;
@@ -10,6 +10,7 @@ interface PageMetadataOptions {
   path: string;
   pathForLocale?: (locale: Locale) => string | undefined;
   noIndex?: boolean;
+  openGraphType?: "website" | "article";
 }
 
 export function createPageMetadata({
@@ -19,8 +20,9 @@ export function createPageMetadata({
   path,
   pathForLocale = () => path,
   noIndex = false,
+  openGraphType = "website",
 }: PageMetadataOptions): Metadata {
-  const socialTitle = `${title} | FixOrReplace`;
+  const socialTitle = `${title} | ${siteConfig.name}`;
   return {
     title,
     description,
@@ -30,8 +32,9 @@ export function createPageMetadata({
     },
     robots: noIndex ? { index: false, follow: true } : undefined,
     openGraph: {
-      type: "website",
-      locale,
+      type: openGraphType,
+      siteName: siteConfig.name,
+      locale: openGraphLocales[locale],
       title: socialTitle,
       description,
       url: path,
@@ -39,7 +42,7 @@ export function createPageMetadata({
         url: absoluteUrl("/og.png"),
         width: 1731,
         height: 909,
-        alt: `${title} | FixOrReplace`,
+        alt: `${title} | ${siteConfig.name}`,
       }],
     },
     twitter: {

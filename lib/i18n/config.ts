@@ -4,6 +4,10 @@ export type Locale = (typeof supportedLocales)[number];
 
 export const defaultLocale: Locale = "en";
 
+export const openGraphLocales = {
+  en: "en_US",
+} satisfies Record<Locale, string>;
+
 export function isSupportedLocale(value: string): value is Locale {
   return supportedLocales.includes(value as Locale);
 }

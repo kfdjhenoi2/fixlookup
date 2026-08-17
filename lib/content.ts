@@ -134,7 +134,7 @@ export function getContent(locale: Locale) {
   const isProblemIndexable = (problem: Problem) => {
     const guide = getGuideById(problem.guideId);
     return problem.verificationStatus === "verified" && hasVerifiedSources(problem.sourceIds) &&
-      (!guide || isGuideIndexable(guide));
+      Boolean(guide && isGuideIndexable(guide));
   };
   const isErrorCodeIndexable = (errorCode: ErrorCode) => {
     const linkedFamilies = errorCode.modelFamilyIds.map((id) => modelFamilies.find((record) => record.id === id));
@@ -243,6 +243,8 @@ function validateContent(content: Content) {
   const errorIds = ids(content.errorCodes);
   const manufacturerIds = ids(content.manufacturers);
   const categoryIds = ids(content.deviceCategories);
+  const familyIds = ids(content.modelFamilies);
+  const modelIds = ids(content.models);
   const requireIds = (owner: string, values: string[], available: Set<string>) => {
     values.forEach((value) => { if (!available.has(value)) errors.push(`${owner} references missing ${value}`); });
   };
@@ -253,10 +255,37 @@ function validateContent(content: Content) {
   unique("manufacturer slugs", content.manufacturers, (record) => record.slug);
   unique("problem IDs", content.problems, (record) => record.id);
   unique("problem slugs", content.problems, (record) => record.slug);
+  unique("guide IDs", content.guides, (record) => record.id);
+  unique("guide slugs", content.guides, (record) => record.slug);
+  unique("model family IDs", content.modelFamilies, (record) => record.id);
+  unique("model family routes", content.modelFamilies, (record) => `${record.manufacturerId}:${record.slug}`);
+  unique("model IDs", content.models, (record) => record.id);
+  unique("model routes", content.models, (record) => `${record.manufacturerId}:${record.slug}`);
+  unique("model identifiers", content.models, (record) => `${record.manufacturerId}:${record.modelNumber.toLocaleLowerCase(content.locale)}`);
+  unique("error IDs", content.errorCodes, (record) => record.id);
   unique("error routes", content.errorCodes, (record) => `${record.manufacturerId}:${record.slug}`);
+  unique("error identifiers", content.errorCodes, (record) => `${record.manufacturerId}:${record.code.toLocaleLowerCase(content.locale)}`);
+  unique(
+    "error code and alias identifiers",
+    content.errorCodes.flatMap((record) =>
+      [record.code, ...record.aliases].map((identifier) => ({
+        manufacturerId: record.manufacturerId,
+        identifier,
+      })),
+    ),
+    (record) => `${record.manufacturerId}:${record.identifier.toLocaleLowerCase(content.locale).trim()}`,
+  );
+  unique(
+    "error aliases",
+    content.errorCodes.flatMap((record) =>
+      record.aliases.map((alias) => ({ manufacturerId: record.manufacturerId, alias })),
+    ),
+    (record) => `${record.manufacturerId}:${record.alias.toLocaleLowerCase(content.locale).trim()}`,
+  );
   unique("source IDs", content.sources, (record) => record.id);
   unique("source URLs", content.sources, (record) => record.url ?? record.id);
   unique("search IDs", content.searchItems, (record) => record.id);
+  unique("troubleshooter node IDs", content.troubleshooterNodes, (record) => record.id);
 
   if (content.deviceCategories.some((record) => record.slug === content.messages.routes.devices)) {
     errors.push("a category slug conflicts with the localized devices route");
@@ -272,28 +301,102 @@ function validateContent(content: Content) {
     if (record.slug === content.messages.routes.models) errors.push(`${record.id} conflicts with the localized models route`);
   });
 
-  content.deviceCategories.forEach((record) => requireIds(record.id, record.manufacturerIds, manufacturerIds));
-  content.manufacturers.forEach((record) => requireIds(record.id, record.categoryIds, categoryIds));
+  content.deviceCategories.forEach((record) => {
+    requireIds(record.id, record.manufacturerIds, manufacturerIds);
+    record.manufacturerIds.forEach((manufacturerId) => {
+      const manufacturer = content.getManufacturerById(manufacturerId);
+      if (manufacturer && !manufacturer.categoryIds.includes(record.id)) {
+        errors.push(`${manufacturer.id} is missing reciprocal category ${record.id}`);
+      }
+    });
+  });
+  content.manufacturers.forEach((record) => {
+    requireIds(record.id, record.categoryIds, categoryIds);
+    record.categoryIds.forEach((categoryId) => {
+      const category = content.getCategoryById(categoryId);
+      if (category && !category.manufacturerIds.includes(record.id)) {
+        errors.push(`${category.id} is missing reciprocal manufacturer ${record.id}`);
+      }
+    });
+  });
+  content.modelFamilies.forEach((record) => {
+    requireIds(record.id, [record.categoryId], categoryIds);
+    requireIds(record.id, [record.manufacturerId], manufacturerIds);
+    requireIds(record.id, record.modelIds, modelIds);
+    requireIds(record.id, record.sourceIds, sourceIds);
+    record.modelIds.forEach((modelId) => {
+      const model = content.models.find((candidate) => candidate.id === modelId);
+      if (model && (model.familyId !== record.id || model.categoryId !== record.categoryId || model.manufacturerId !== record.manufacturerId)) {
+        errors.push(`${record.id} conflicts with ${model.id}`);
+      }
+    });
+    if (record.verificationStatus === "verified" && !content.isModelFamilyIndexable(record)) {
+      errors.push(`${record.id} is verified but not indexable`);
+    }
+  });
+  content.models.forEach((record) => {
+    requireIds(record.id, [record.categoryId], categoryIds);
+    requireIds(record.id, [record.manufacturerId], manufacturerIds);
+    requireIds(record.id, [record.familyId], familyIds);
+    requireIds(record.id, record.guideIds, guideIds);
+    requireIds(record.id, record.sourceIds, sourceIds);
+    const family = content.modelFamilies.find((candidate) => candidate.id === record.familyId);
+    if (family && !family.modelIds.includes(record.id)) errors.push(`${record.id} is missing from ${family.id}`);
+    if (record.verificationStatus === "verified" && !content.isModelIndexable(record)) {
+      errors.push(`${record.id} is verified but not indexable`);
+    }
+  });
   content.problems.forEach((record) => {
     requireIds(record.id, [record.categoryId], categoryIds);
     requireIds(record.id, record.relatedProblemIds, problemIds);
     requireIds(record.id, record.sourceIds, sourceIds);
     if (record.guideId) requireIds(record.id, [record.guideId], guideIds);
+    if (record.relatedProblemIds.includes(record.id)) errors.push(`${record.id} relates to itself`);
+    record.relatedProblemIds.forEach((relatedId) => {
+      const related = content.getProblemById(relatedId);
+      if (related && !related.relatedProblemIds.includes(record.id)) {
+        errors.push(`${record.id} and ${related.id} are not reciprocally related`);
+      }
+    });
+    if (record.guideId) {
+      const guide = content.getGuideById(record.guideId);
+      if (guide && !guide.problemIds.includes(record.id)) errors.push(`${record.id} is missing from ${guide.id}`);
+    }
     if (record.verificationStatus === "verified" && !content.isProblemIndexable(record)) errors.push(`${record.id} is verified but not indexable`);
   });
   content.errorCodes.forEach((record) => {
     requireIds(record.id, [record.categoryId], categoryIds);
     requireIds(record.id, [record.manufacturerId], manufacturerIds);
+    requireIds(record.id, record.modelFamilyIds, familyIds);
     requireIds(record.id, record.sourceIds, sourceIds);
     if (record.guideId) requireIds(record.id, [record.guideId], guideIds);
+    if (record.guideId) {
+      const guide = content.getGuideById(record.guideId);
+      if (guide && !guide.errorCodeIds.includes(record.id)) errors.push(`${record.id} is missing from ${guide.id}`);
+    }
     if (!record.sourceScope.trim() || !record.applicabilityNote.trim()) errors.push(`${record.id} lacks localized scope`);
     if (record.signalIds.length !== record.signalLabels.length) errors.push(`${record.id} has mismatched localized signals`);
+    unique(`${record.id} signal IDs`, record.signalIds, (signalId) => signalId);
     if (record.verificationStatus === "verified" && !content.isErrorCodeIndexable(record)) errors.push(`${record.id} is verified but not indexable`);
   });
   content.guides.forEach((record) => {
+    requireIds(record.id, [record.categoryId], categoryIds);
     requireIds(record.id, record.problemIds, problemIds);
+    requireIds(record.id, [record.canonicalProblemId], problemIds);
     requireIds(record.id, record.errorCodeIds, errorIds);
     requireIds(record.id, record.sourceIds, sourceIds);
+    if (!record.problemIds.includes(record.canonicalProblemId)) {
+      errors.push(`${record.id} does not include its canonical problem`);
+    }
+    record.problemIds.forEach((problemId) => {
+      const problem = content.getProblemById(problemId);
+      if (problem && problem.guideId !== record.id) errors.push(`${record.id} is not assigned by ${problem.id}`);
+    });
+    record.errorCodeIds.forEach((errorId) => {
+      const errorCode = content.errorCodes.find((candidate) => candidate.id === errorId);
+      if (errorCode && errorCode.guideId !== record.id) errors.push(`${record.id} is not assigned by ${errorCode.id}`);
+    });
+    unique(`${record.id} step IDs`, record.steps, (step) => step.id);
     record.steps.forEach((step) => {
       requireIds(`${record.id}/${step.id}`, step.sourceIds, sourceIds);
       step.sourceIds.forEach((sourceId) => {
@@ -301,13 +404,39 @@ function validateContent(content: Content) {
       });
     });
     if (record.verificationStatus === "verified" && !content.isGuideIndexable(record)) errors.push(`${record.id} is verified but not indexable`);
+    if (record.verificationStatus === "verified" && !record.lastReviewed) errors.push(`${record.id} has no review date`);
+  });
+  content.sources.forEach((record) => {
+    if (record.verificationStatus === "verified" && record.type === "editorial-placeholder") {
+      errors.push(`${record.id} cannot verify a placeholder`);
+    }
+    if (record.verificationStatus === "verified" && (!record.url || !record.url.startsWith("https://"))) {
+      errors.push(`${record.id} is verified without an HTTPS URL`);
+    }
+  });
+  const referencedSourceIds = new Set([
+    ...content.modelFamilies.flatMap((record) => record.sourceIds),
+    ...content.models.flatMap((record) => record.sourceIds),
+    ...content.problems.flatMap((record) => record.sourceIds),
+    ...content.errorCodes.flatMap((record) => record.sourceIds),
+    ...content.guides.flatMap((record) => [
+      ...record.sourceIds,
+      ...record.steps.flatMap((step) => step.sourceIds),
+    ]),
+  ]);
+  content.sources.forEach((record) => {
+    if (!referencedSourceIds.has(record.id)) errors.push(`${record.id} is not cited by any record`);
   });
   const nodeIds = ids(content.troubleshooterNodes);
+  if (!nodeIds.has("start")) errors.push("troubleshooter has no start node");
   content.troubleshooterNodes.forEach((record) => {
-    if (record.kind === "question") requireIds(record.id, record.options.map((option) => option.nextNodeId), nodeIds);
+    if (record.kind === "question") {
+      if (!record.options.length) errors.push(`${record.id} has no options`);
+      requireIds(record.id, record.options.map((option) => option.nextNodeId), nodeIds);
+    }
   });
   content.searchItems.forEach((record) => {
     if (!record.href.startsWith(`/${content.locale}/`)) errors.push(`${record.id} leaves active locale`);
   });
-  if (errors.length) throw new Error(`Invalid FixOrReplace content (${content.locale}):\n${errors.join("\n")}`);
+  if (errors.length) throw new Error(`Invalid FixLookup content (${content.locale}):\n${errors.join("\n")}`);
 }

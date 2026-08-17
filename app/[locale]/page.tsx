@@ -8,7 +8,7 @@ import { isSupportedLocale } from "@/lib/i18n/config";
 import { formatMessage } from "@/lib/i18n/messages";
 import { paths } from "@/lib/i18n/routing";
 import { createPageMetadata } from "@/lib/metadata";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 
 interface PageProps { params: Promise<{ locale: string }> }
 
@@ -41,7 +41,7 @@ export default async function Home({ params }: PageProps) {
       <JsonLd data={{
         "@context": "https://schema.org",
         "@type": "WebSite",
-        name: "FixOrReplace",
+        name: siteConfig.name,
         inLanguage: locale,
         url: absoluteUrl(paths.home(locale)),
         description: page.metaDescription,
