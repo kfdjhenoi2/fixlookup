@@ -1,0 +1,10 @@
+import { buildErrorRecords } from "../builders";
+
+export const electroluxErrors = buildErrorRecords([
+  { id: "error-electrolux-i20", code: "i20", aliases: ["C2", "F2", "AL6"], signalIds: ["two-beeps", "two-led-flashes"], manufacturerId: "manufacturer-electrolux", marketIds: ["market-uk"], sourceIds: ["source-electrolux-drain-i20"], problemIds: ["problem-dishwasher-not-draining"], guideIds: ["guide-dishwasher-not-draining"], safetyLevel: "caution" },
+  { id: "error-electrolux-i30", code: "i30", signalIds: ["three-beeps", "three-led-flashes"], manufacturerId: "manufacturer-electrolux", marketIds: ["market-uk"], sourceIds: ["source-electrolux-i30"], problemIds: ["problem-dishwasher-leaking"], guideIds: ["guide-dishwasher-leaking"], safetyLevel: "caution" },
+  { id: "error-electrolux-i10", code: "i10", aliases: ["i11", "AL5", "C1", "F1"], signalIds: ["one-beep", "one-led-flash"], manufacturerId: "manufacturer-electrolux", marketIds: ["market-uk"], sourceIds: ["source-electrolux-inlet-i10"], problemIds: ["problem-dishwasher-not-filling"], guideIds: ["guide-dishwasher-not-filling"], safetyLevel: "caution", featureTags: ["freestanding", "integrated"] },
+  { id: "error-electrolux-i40", code: "i40", aliases: ["i41", "i43", "i44"], signalIds: ["four-beeps", "four-led-flashes"], manufacturerId: "manufacturer-electrolux", marketIds: ["market-uk"], sourceIds: ["source-electrolux-i40"], problemIds: ["problem-dishwasher-not-filling", "problem-dishwasher-excessive-foam"], guideIds: ["guide-dishwasher-not-filling", "guide-dishwasher-excessive-foam"], safetyLevel: "caution", featureTags: ["freestanding", "integrated"] },
+  { id: "error-electrolux-if0", code: "iF0", aliases: ["iFo", "iF1"], manufacturerId: "manufacturer-electrolux", marketIds: ["market-uk"], sourceIds: ["source-electrolux-if0"], problemIds: ["problem-dishwasher-not-filling", "problem-dishwasher-excessive-foam"], guideIds: ["guide-dishwasher-not-filling", "guide-dishwasher-excessive-foam"], safetyLevel: "caution", featureTags: ["freestanding", "integrated"] },
+]);
+

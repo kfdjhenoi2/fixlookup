@@ -1,15 +1,16 @@
 # FixLookup
 
-FixLookup is a source-aware troubleshooting index for household appliances and consumer devices. The MVP focuses on a deliberately small dishwasher cluster: eight shared problem guides and nine manufacturer error-code records backed by primary sources.
+FixLookup is a source-aware troubleshooting index for household appliances and consumer devices. The current dishwasher cluster contains 14 shared problem guides and 29 canonical manufacturer error-signal records backed by official sources.
 
 ## Architecture
 
 - `app/` contains locale-prefixed server-rendered routes, metadata, sitemap, and robots output. `/` permanently redirects to `/en/`.
 - `components/` contains reusable UI plus the two client-side interactions: search and the troubleshooting flow.
 - `lib/types.ts` defines the normalized content entities.
-- `lib/data/` contains the language-independent dishwasher knowledge graph and primary-source relationships.
-- `lib/i18n/` contains supported-locale configuration, localized slugs, UI/SEO copy, and entity presentation records.
-- `lib/content.ts` joins knowledge to a locale and provides publication gates, locale-aware search indexing, and relationship validation.
+- `lib/data/dishwashers/` contains shared knowledge plus manufacturer-specific error modules. Signals, scoped interpretations, applicability, evidence claims, and sources are separate language-independent records.
+- `lib/i18n/` contains supported-locale configuration, localized slugs, UI/SEO copy, and entity presentation records; the Phase 1A additions are isolated in `lib/i18n/en-dishwashers/`.
+- `lib/content.ts` joins knowledge to a locale, derives reusable relationships, and enforces the verified-only publication gate.
+- `lib/search.mjs` provides dependency-free normalized search for words, code aliases, and source-backed applicability identifiers.
 - `tests/` validates rendered routes, core templates, SEO output, and internal links.
 
 The content layer is intentionally static for the MVP. Its stable entity IDs and explicit relationships make it straightforward to move to a database or content pipeline without changing route semantics. Standard Next.js is the default development and production target; the retained vinext configuration provides a separate Sites-compatible build.
@@ -60,6 +61,7 @@ npm run build
 npm run build:sites
 npm test
 npm run test:preview
+npm run check:sources
 npm run scan:secrets
 npm audit --omit=dev --audit-level=high
 ```

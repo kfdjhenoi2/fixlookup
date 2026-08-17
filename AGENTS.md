@@ -49,7 +49,9 @@ Use structured data for:
 - model families
 - models
 - problems
-- error codes
+- error signals and scoped interpretations
+- machine-readable applicability scopes
+- claim-level evidence
 - troubleshooting guides
 - sources
 - safety classifications
@@ -85,6 +87,8 @@ Preferred sources:
 5. Reputable technical sources when primary sources are unavailable
 
 Technical claims must be traceable to sources.
+
+Represent a displayed error signal independently from its meaning. When an official source assigns different meanings by market, family, model, or feature, store separate scoped interpretations rather than flattening them into a generic meaning. Manufacturer-level evidence must never silently imply exact-model compatibility.
 
 If reliable information cannot be found, omit the claim or mark the data as requiring review.
 

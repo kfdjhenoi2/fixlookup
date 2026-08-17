@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { trackAnalyticsEvent } from "@/lib/analytics/events";
+import { searchKnowledgeItems } from "@/lib/search.mjs";
 import type { SearchItem } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -31,18 +32,7 @@ export function SearchBox({
   const normalizedQuery = query.trim().toLocaleLowerCase(locale);
   const results = useMemo(() => {
     if (!normalizedQuery) return [];
-    return items
-      .map((item) => {
-        const haystack = [item.label, item.description, typeLabels[item.type], ...item.keywords]
-          .join(" ")
-          .toLocaleLowerCase(locale);
-        const startsWithLabel = item.label.toLocaleLowerCase(locale).startsWith(normalizedQuery);
-        return { item, rank: startsWithLabel ? 0 : haystack.includes(normalizedQuery) ? 1 : 2 };
-      })
-      .filter(({ rank }) => rank < 2)
-      .sort((a, b) => a.rank - b.rank)
-      .slice(0, 6)
-      .map(({ item }) => item);
+    return searchKnowledgeItems(items, normalizedQuery, typeLabels, 10, locale);
   }, [items, locale, normalizedQuery, typeLabels]);
 
   useEffect(() => {

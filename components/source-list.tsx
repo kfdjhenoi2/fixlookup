@@ -60,10 +60,10 @@ export function SourceList({
         {sources.length ? sources.map((source) => (
           <article className="source-item" id={`source-${source.id}`} key={source.id}>
             <div>
-              <span className="source-type">{sourceTypeLabels[source.type]}</span>
+              <span className="source-type">{sourceTypeLabels[source.kind]}</span>
               <h3>
                 {source.url ? (
-                  <TrackedSourceLink href={source.url} sourceId={source.id} sourceType={source.type}>
+                  <TrackedSourceLink href={source.url} sourceId={source.id} sourceType={source.kind}>
                     {source.title}<span className="sr-only"> ({messages.opensNewTab})</span>
                   </TrackedSourceLink>
                 ) : source.title}

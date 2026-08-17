@@ -2,18 +2,31 @@ export type VerificationStatus = "demo" | "needs-review" | "verified";
 
 export type SafetyLevel = "user-safe" | "caution" | "professional-only";
 
-export type SourceType =
+export type SourceKind =
   | "manufacturer-manual"
   | "manufacturer-support"
   | "official-service-document"
   | "reputable-technical"
   | "editorial-placeholder";
 
+export type EvidenceClaimKind =
+  | "error-signal"
+  | "error-meaning"
+  | "applicability"
+  | "guide-step"
+  | "safety-boundary"
+  | "model-relationship";
+
+export type ApplicabilityScopeKind =
+  | "manufacturer-market"
+  | "model-family"
+  | "exact-model"
+  | "feature";
+
 // Stable, language-independent knowledge records. Localized copy and slugs are
 // deliberately absent from these types.
 export interface DeviceCategoryKnowledge {
   id: string;
-  manufacturerIds: string[];
   verificationStatus: VerificationStatus;
 }
 
@@ -23,12 +36,15 @@ export interface ManufacturerKnowledge {
   verificationStatus: VerificationStatus;
 }
 
+export interface MarketKnowledge {
+  id: string;
+}
+
 export interface ModelFamilyKnowledge {
   id: string;
   categoryId: string;
   manufacturerId: string;
-  modelIds: string[];
-  sourceIds: string[];
+  evidenceClaimIds: string[];
   verificationStatus: VerificationStatus;
 }
 
@@ -37,9 +53,8 @@ export interface DeviceModelKnowledge {
   modelNumber: string;
   categoryId: string;
   manufacturerId: string;
-  familyId: string;
-  guideIds: string[];
-  sourceIds: string[];
+  familyId?: string;
+  evidenceClaimIds: string[];
   verificationStatus: VerificationStatus;
   isFictional: boolean;
 }
@@ -47,30 +62,58 @@ export interface DeviceModelKnowledge {
 export interface ProblemKnowledge {
   id: string;
   categoryId: string;
-  guideId?: string;
-  sourceIds: string[];
   relatedProblemIds: string[];
   safetyLevel: SafetyLevel;
   verificationStatus: VerificationStatus;
 }
 
-export interface ErrorCodeKnowledge {
+export interface ApplicabilityScopeKnowledge {
+  id: string;
+  kind: ApplicabilityScopeKind;
+  categoryId: string;
+  manufacturerId: string;
+  marketIds: string[];
+  modelFamilyIds: string[];
+  modelIds: string[];
+  featureTags: string[];
+  exactModelConfirmationRequired: boolean;
+  verificationStatus: VerificationStatus;
+}
+
+export interface EvidenceClaimKnowledge {
+  id: string;
+  kind: EvidenceClaimKind;
+  sourceIds: string[];
+  applicabilityScopeId?: string;
+  verificationStatus: VerificationStatus;
+}
+
+export interface ErrorSignalKnowledge {
   id: string;
   code: string;
   aliases: string[];
   signalIds: string[];
   categoryId: string;
   manufacturerId: string;
-  modelFamilyIds: string[];
-  guideId?: string;
-  sourceIds: string[];
+  evidenceClaimIds: string[];
   verificationStatus: VerificationStatus;
   isFictional: boolean;
 }
 
+export interface ErrorInterpretationKnowledge {
+  id: string;
+  signalId: string;
+  problemIds: string[];
+  guideIds: string[];
+  applicabilityScopeId: string;
+  evidenceClaimIds: string[];
+  safetyLevel: SafetyLevel;
+  verificationStatus: VerificationStatus;
+}
+
 export interface TroubleshootingStepKnowledge {
   id: string;
-  sourceIds: string[];
+  evidenceClaimIds: string[];
   safetyLevel: SafetyLevel;
 }
 
@@ -79,9 +122,7 @@ export interface TroubleshootingGuideKnowledge {
   categoryId: string;
   canonicalProblemId: string;
   problemIds: string[];
-  errorCodeIds: string[];
   steps: TroubleshootingStepKnowledge[];
-  sourceIds: string[];
   safetyLevel: SafetyLevel;
   verificationStatus: VerificationStatus;
   lastReviewed: string | null;
@@ -91,8 +132,12 @@ export interface TroubleshootingGuideKnowledge {
 export interface SourceKnowledge {
   id: string;
   publisher: string;
-  type: SourceType;
+  kind: SourceKind;
+  marketIds: string[];
+  language?: string;
   url?: string;
+  documentIdentifier?: string;
+  revision?: string;
   publishedAt?: string;
   accessedAt?: string;
   lastReviewed: string | null;
@@ -139,11 +184,18 @@ export interface ProblemTranslation {
   symptomLabels: string[];
 }
 
-export interface ErrorCodeTranslation {
+export interface ErrorSignalTranslation {
   slug: string;
   title: string;
   signalLabels: string[];
+}
+
+export interface ErrorInterpretationTranslation {
   summary: string;
+  guidance: string;
+}
+
+export interface ApplicabilityScopeTranslation {
   sourceScope: string;
   applicabilityNote: string;
 }
@@ -167,20 +219,49 @@ export interface TroubleshooterTranslation {
 }
 
 // Locale-composed view models used by the UI.
-export interface DeviceCategory extends DeviceCategoryKnowledge, CategoryTranslation {}
+export interface DeviceCategory extends DeviceCategoryKnowledge, CategoryTranslation {
+  manufacturerIds: string[];
+}
 export interface Manufacturer extends ManufacturerKnowledge, ManufacturerTranslation {}
-export interface ModelFamily extends ModelFamilyKnowledge, ModelFamilyTranslation {}
-export interface DeviceModel extends DeviceModelKnowledge, ModelTranslation {}
-export interface Problem extends ProblemKnowledge, ProblemTranslation {}
-export interface ErrorCode extends ErrorCodeKnowledge, ErrorCodeTranslation {}
+export type Market = MarketKnowledge;
+export interface ModelFamily extends ModelFamilyKnowledge, ModelFamilyTranslation {
+  sourceIds: string[];
+}
+export interface DeviceModel extends DeviceModelKnowledge, ModelTranslation {
+  guideIds: string[];
+  sourceIds: string[];
+}
+export interface Problem extends ProblemKnowledge, ProblemTranslation {
+  guideId?: string;
+  sourceIds: string[];
+}
+export interface ApplicabilityScope extends ApplicabilityScopeKnowledge, ApplicabilityScopeTranslation {}
+export type EvidenceClaim = EvidenceClaimKnowledge;
+export interface ErrorInterpretation extends ErrorInterpretationKnowledge, ErrorInterpretationTranslation {
+  applicability: ApplicabilityScope;
+  sourceIds: string[];
+}
+export interface ErrorCode extends ErrorSignalKnowledge, ErrorSignalTranslation {
+  interpretations: ErrorInterpretation[];
+  sourceIds: string[];
+  problemIds: string[];
+  guideIds: string[];
+  guideId?: string;
+  safetyLevel: SafetyLevel;
+  summary: string;
+  sourceScope: string;
+  applicabilityNote: string;
+}
 export interface TroubleshootingStep extends TroubleshootingStepKnowledge {
   title: string;
   instruction: string;
+  sourceIds: string[];
 }
 export interface TroubleshootingGuide
   extends Omit<TroubleshootingGuideKnowledge, "steps">,
     Omit<GuideTranslation, "steps"> {
   steps: TroubleshootingStep[];
+  sourceIds: string[];
 }
 export interface SourceReference extends SourceKnowledge, SourceTranslation {}
 
@@ -190,7 +271,12 @@ export interface SearchItem {
   description: string;
   type: "device" | "manufacturer" | "model" | "problem" | "errorCode";
   href: string;
-  keywords: string[];
+  identifiers: string[];
+  aliases: string[];
+  manufacturer?: string;
+  titleTerms: string[];
+  descriptionTerms: string[];
+  applicabilityIdentifiers: string[];
 }
 
 export interface TroubleshooterOption {

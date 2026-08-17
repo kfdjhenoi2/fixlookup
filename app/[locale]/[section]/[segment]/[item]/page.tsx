@@ -136,10 +136,18 @@ function ProblemPage({ locale, category, problem, content }: { locale: Locale; c
 
 function ErrorPage({ locale, category, manufacturer, code, content }: { locale: Locale; category: Content["deviceCategories"][number]; manufacturer: Content["manufacturers"][number]; code: Content["errorCodes"][number]; content: Content }) {
   const page = content.messages.pages.error;
-  const guide = content.getGuideById(code.guideId);
-  const canonicalProblem = guide && content.getProblemById(guide.canonicalProblemId);
+  const linkedGuides = code.guideIds.flatMap((guideId) => {
+    const guide = content.getGuideById(guideId);
+    const problem = guide && content.getProblemById(guide.canonicalProblemId);
+    return guide && problem ? [{ guide, problem }] : [];
+  });
   const sources = content.getSourcesByIds(code.sourceIds);
-  const related = canonicalProblem ? content.getRelatedProblems(canonicalProblem) : [];
+  const directlyLinkedProblemIds = new Set(code.problemIds);
+  const related = content.problems.filter((problem) =>
+    !directlyLinkedProblemIds.has(problem.id) &&
+    code.problemIds.some((problemId) => content.getProblemById(problemId)?.relatedProblemIds.includes(problem.id)) &&
+    content.isProblemIndexable(problem),
+  );
   const path = paths.errorCode(locale, category, manufacturer, code);
   return (
     <main className="page-main" id="main-content">
@@ -154,17 +162,35 @@ function ErrorPage({ locale, category, manufacturer, code, content }: { locale: 
         image: absoluteUrl("/og.png"),
         author: { "@type": "Organization", name: siteConfig.name, url: absoluteUrl(paths.home(locale)) },
         publisher: { "@type": "Organization", name: siteConfig.name, url: absoluteUrl(paths.home(locale)) },
-        dateModified: guide?.lastReviewed ?? undefined,
+        dateModified: linkedGuides.map(({ guide }) => guide.lastReviewed).filter(Boolean).sort().at(-1) ?? undefined,
         isBasedOn: sources.flatMap((source) => source.url ? [source.url] : []),
       }} />
       <div className="site-shell">
         <Breadcrumbs ariaLabel={content.messages.ui.breadcrumb} currentPath={path} items={[{ label: content.messages.ui.home, href: paths.home(locale) }, { label: category.name, href: paths.category(locale, category) }, { label: manufacturer.name, href: paths.manufacturer(locale, category, manufacturer) }, { label: code.code }]} />
         <header className="error-hero"><div className="error-code-block"><span>{page.codeLabel}</span><code>{code.code}</code></div><div className="error-hero-copy"><span className="eyebrow">{page.eyebrow}</span><div className="card-badges"><VerificationBadge status={code.verificationStatus} labels={content.messages.verificationLabels} /></div><h1>{manufacturer.name} {code.code}</h1><p>{code.summary}</p>{code.aliases.length || code.signalLabels.length ? <p className="alias-line">{formatMessage(page.aliases, { aliases: [...code.aliases, ...code.signalLabels].join(", ") })}</p> : null}</div></header>
-        <div className="fact-grid"><div><span>{page.scope}</span><strong>{code.sourceScope}</strong></div><div><span>{page.applicability}</span><strong>{code.applicabilityNote}</strong></div><div><span>{page.evidenceStatus}</span><strong>{content.messages.verificationLabels[code.verificationStatus]}</strong></div></div>
-        {guide && canonicalProblem ? (
+        <section className="section-block" aria-labelledby="interpretations-heading">
+          <div className="section-heading"><div><span className="eyebrow">{page.interpretation}</span><h2 id="interpretations-heading">{page.interpretations}</h2></div></div>
+          <div className="source-list">
+          {code.interpretations.map((interpretation) => (
+            <article className="source-item interpretation-card" key={interpretation.id}>
+              <div>
+                <div className="card-badges"><SafetyBadge level={interpretation.safetyLevel} labels={content.messages.safetyLabels} /></div>
+                <p>{interpretation.summary}</p>
+                <div className="fact-grid"><div><span>{page.scope}</span><strong>{interpretation.applicability.sourceScope}</strong></div><div><span>{page.applicability}</span><strong>{interpretation.applicability.applicabilityNote}</strong></div><div><span>{page.guidance}</span><strong>{interpretation.guidance}</strong></div></div>
+                <ClaimSources sourceIds={interpretation.sourceIds} sources={sources} messages={content.messages.ui} />
+              </div>
+            </article>
+          ))}
+          </div>
+        </section>
+        {linkedGuides.length ? (
           <section className="section-block" aria-labelledby="shared-guide-heading">
-            <div className="section-heading"><div><span className="eyebrow">{page.sharedEyebrow}</span><h2 id="shared-guide-heading">{page.canonical}</h2></div><SafetyBadge level={guide.safetyLevel} labels={content.messages.safetyLabels} /></div>
-            <Link className="guide-summary" href={paths.problem(locale, category, canonicalProblem)}><div><h3>{guide.title}</h3><p>{page.canonicalBody}</p></div><span aria-hidden="true">→</span></Link>
+            <div className="section-heading"><div><span className="eyebrow">{page.sharedEyebrow}</span><h2 id="shared-guide-heading">{page.canonical}</h2></div></div>
+            {linkedGuides.map(({ guide: linkedGuide, problem }) => (
+              <Link className="guide-summary" href={paths.problem(locale, category, problem)} key={linkedGuide.id}>
+                <div><div className="card-badges"><SafetyBadge level={linkedGuide.safetyLevel} labels={content.messages.safetyLabels} /></div><h3>{linkedGuide.title}</h3><p>{page.canonicalBody}</p></div><span aria-hidden="true">→</span>
+              </Link>
+            ))}
           </section>
         ) : <section className="empty-state empty-state-wide"><span className="empty-state-code">?</span><div><h2>{page.noGuide}</h2><p>{page.noGuideBody}</p><Link className="text-link" href={paths.troubleshooter(locale, category)}>{page.useFramework}</Link></div></section>}
         <SourceList sources={sources} messages={content.messages.ui} sourceTypeLabels={content.messages.sourceTypeLabels} verificationLabels={content.messages.verificationLabels} />

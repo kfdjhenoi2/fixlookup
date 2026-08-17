@@ -15,6 +15,7 @@
     "test:preview": "node scripts/run-preview-tests.mjs",
     "typecheck": "tsc --project tsconfig.check.json --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "check:sources": "node scripts/check-source-links.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs"
   },
   "dependencies": {

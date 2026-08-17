@@ -1,6 +1,8 @@
 import type {
+  ApplicabilityScopeTranslation,
   CategoryTranslation,
-  ErrorCodeTranslation,
+  ErrorInterpretationTranslation,
+  ErrorSignalTranslation,
   GuideTranslation,
   ManufacturerTranslation,
   ModelFamilyTranslation,
@@ -27,7 +29,9 @@ export interface LocaleContent {
   modelFamilies: Record<string, ModelFamilyTranslation>;
   models: Record<string, ModelTranslation>;
   problems: Record<string, ProblemTranslation>;
-  errorCodes: Record<string, ErrorCodeTranslation>;
+  errorSignals: Record<string, ErrorSignalTranslation>;
+  errorInterpretations: Record<string, ErrorInterpretationTranslation>;
+  applicabilityScopes: Record<string, ApplicabilityScopeTranslation>;
   guides: Record<string, GuideTranslation>;
   sources: Record<string, SourceTranslation>;
   troubleshooter: Record<string, TroubleshooterTranslation>;

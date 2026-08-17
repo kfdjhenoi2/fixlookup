@@ -1,4 +1,13 @@
 import type { LocaleContent } from "./types";
+import {
+  dishwasherApplicabilityScopes,
+  dishwasherErrorInterpretations,
+  dishwasherErrorSignals,
+  phase1aGuides,
+  phase1aManufacturers,
+  phase1aProblems,
+  phase1aSources,
+} from "./en-dishwashers/phase1a";
 
 export const en = {
   routes: {
@@ -21,19 +30,22 @@ export const en = {
         "Browse source-reviewed dishwasher symptoms and manufacturer error-code records from one structured category.",
     },
   },
-  manufacturers: Object.fromEntries(
-    ["bosch", "siemens", "electrolux", "whirlpool", "samsung"].map((slug) => {
-      const name = slug[0].toUpperCase() + slug.slice(1);
-      return [
-        `manufacturer-${slug}`,
-        {
-          slug,
-          name,
-          overview: `This ${name} index publishes error-code records only when their meaning, source scope, and evidence have been reviewed. Model compatibility is never inferred.`,
-        },
-      ];
-    }),
-  ),
+  manufacturers: {
+    ...Object.fromEntries(
+      ["bosch", "siemens", "electrolux", "whirlpool", "samsung"].map((slug) => {
+        const name = slug[0].toUpperCase() + slug.slice(1);
+        return [
+          `manufacturer-${slug}`,
+          {
+            slug,
+            name,
+            overview: `This ${name} index publishes error-code records only when their meaning, source scope, and evidence have been reviewed. Model compatibility is never inferred.`,
+          },
+        ];
+      }),
+    ),
+    ...phase1aManufacturers,
+  },
   modelFamilies: {},
   models: {},
   problems: {
@@ -85,81 +97,11 @@ export const en = {
       summary: "Keep the dispenser dry and unobstructed, match the detergent to a suitable cycle, and use service support if basic checks do not resolve it.",
       symptomLabels: ["Tablet remains in dispenser", "Detergent remains after cycle", "Dispenser door obstructed"],
     },
+    ...phase1aProblems,
   },
-  errorCodes: {
-    "error-bosch-e15": {
-      slug: "e15",
-      title: "E15 error code",
-      signalLabels: [],
-      summary: "Bosch says E15 means the safety switch detected water in the dishwasher base and the leakage-protection system activated. Turn off the water inflow and contact Bosch support.",
-      sourceScope: "Bosch US dishwasher support",
-      applicabilityNote: "No model family is assigned. Confirm E15 in the official manual for the exact dishwasher before relying on this record.",
-    },
-    "error-bosch-e24": {
-      slug: "e24",
-      title: "E24 error code",
-      signalLabels: [],
-      summary: "Bosch describes E24 as a drainage problem associated with a blocked drain filter and lists the drain hose and sink or disposal connection among the checks.",
-      sourceScope: "Bosch US dishwasher support",
-      applicabilityNote: "No model family is assigned. Confirm E24 and the permitted checks in the official manual for the exact dishwasher.",
-    },
-    "error-siemens-e15": {
-      slug: "e15",
-      title: "E15 error code",
-      signalLabels: [],
-      summary: "Siemens says E15 signals water in the floor tub. Its guidance is to turn off the tap and contact customer service.",
-      sourceScope: "Siemens Home Ireland dishwasher support",
-      applicabilityNote: "No model family is assigned. Confirm E15 in the official manual for the exact dishwasher and use support for the correct market.",
-    },
-    "error-electrolux-i20": {
-      slug: "i20",
-      title: "i20 drainage error",
-      signalLabels: ["2 beeps", "2 LED flashes"],
-      summary: "Electrolux groups i20 with C2, F2, AL6, two beeps, or two LED flashes and says these signals indicate a dishwasher drainage problem.",
-      sourceScope: "Electrolux UK freestanding and integrated dishwasher support",
-      applicabilityNote: "These aliases are grouped by the cited support page, but no model family is assigned. Confirm the signal in the exact model manual.",
-    },
-    "error-electrolux-i30": {
-      slug: "i30",
-      title: "i30 leak error",
-      signalLabels: ["3 beeps", "3 LED flashes"],
-      summary: "Electrolux says i30, three beeps, or three LED flashes may indicate an internal leak with water collecting in the appliance base. Close the tap and arrange service if it returns.",
-      sourceScope: "Electrolux UK freestanding and integrated dishwasher support",
-      applicabilityNote: "The signal grouping comes from the cited support page, but no model family is assigned. Confirm it in the exact model manual.",
-    },
-    "error-samsung-4c": {
-      slug: "4c-4e",
-      title: "4C / 4E information code",
-      signalLabels: [],
-      summary: "Samsung UK groups 4C and 4E as dishwasher water-supply issue codes and lists the supply valve and visible supply hose among the checks.",
-      sourceScope: "Samsung UK dishwasher support",
-      applicabilityNote: "The alias is grouped by the cited support page, but no model family is assigned. Confirm the code in the exact model manual.",
-    },
-    "error-samsung-5c": {
-      slug: "5c-5e",
-      title: "5C / 5E information code",
-      signalLabels: [],
-      summary: "Samsung UK groups 5C and 5E as dishwasher drainage issue codes and lists the drain hose and filter among the checks.",
-      sourceScope: "Samsung UK dishwasher support",
-      applicabilityNote: "The alias is grouped by the cited support page, but no model family is assigned. Confirm the code in the exact model manual.",
-    },
-    "error-samsung-lc": {
-      slug: "lc-le",
-      title: "LC / LE information code",
-      signalLabels: [],
-      summary: "Samsung UK groups LC and LE as dishwasher leak issue codes and directs persistent cases to the Samsung service centre.",
-      sourceScope: "Samsung UK dishwasher support",
-      applicabilityNote: "The alias is grouped by the cited support page, but no model family is assigned. Confirm the code in the exact model manual.",
-    },
-    "error-whirlpool-f8e4": {
-      slug: "f8e4",
-      title: "F8E4 error code",
-      signalLabels: [],
-      summary: "Whirlpool's F8E4 support page focuses on water, installation, and excessive-suds checks. For a professionally installed unit it says operation is prevented and directs the user to turn off the water supply.",
-      sourceScope: "Whirlpool US dishwasher support",
-      applicabilityNote: "No model family is assigned. Confirm F8E4 in the exact model manual before following any model-specific procedure.",
-    },
-  },
+  errorSignals: dishwasherErrorSignals,
+  errorInterpretations: dishwasherErrorInterpretations,
+  applicabilityScopes: dishwasherApplicabilityScopes,
   guides: {
     "guide-dishwasher-not-draining": {
       slug: "dishwasher-not-draining",
@@ -241,6 +183,7 @@ export const en = {
         "tablet-escalate": { title: "Escalate if the basic checks do not resolve it", instruction: "If detergent still remains after the dispenser, loading, detergent, and cycle checks, contact manufacturer support or qualified service. Do not test heaters, wiring, or the dispenser mechanism yourself." },
       },
     },
+    ...phase1aGuides,
   },
   sources: {
     "source-bosch-not-draining": { title: "Dishwasher troubleshooting: dishwasher is not draining", note: "Supports model-manual-led filter cleaning and escalation when draining does not resume." },
@@ -268,6 +211,7 @@ export const en = {
     "source-whirlpool-detergent-remains": { title: "Detergent remains at end of cycle: dishwasher", note: "Supports cleaning caked detergent, keeping detergent dry and fresh, using automatic dishwasher detergent, and checking for an obstructed dispenser." },
     "source-whirlpool-f8e4": { title: "F8E4 error code: dishwasher", note: "Supports water/suds checks, stopping the water supply, and service escalation; internal drip-tray and float-switch procedures are intentionally not reproduced here." },
     "source-samsung-water-codes": { title: "5C/5E, 4C/4E, and LC/LE information codes on a dishwasher", note: "Defines 5C/5E as drainage, 4C/4E as water supply, and LC/LE as leak issues, and directs persistent cases to Samsung service." },
+    ...phase1aSources,
   },
   troubleshooter: {
     start: {
@@ -485,7 +429,10 @@ export const en = {
       metaDescription: "Review the sourced meaning, applicability boundary, and safe next steps for the {name} dishwasher {code} record.",
       eyebrow: "Manufacturer error-code record",
       codeLabel: "Error code",
-      aliases: "Also shown as: {aliases}",
+      aliases: "Also documented as: {aliases}",
+      interpretations: "Sourced meaning and scope",
+      interpretation: "Documented interpretation",
+      guidance: "Safe next step",
       applicability: "Applicability boundary",
       scope: "Source scope",
       evidenceStatus: "Evidence status",

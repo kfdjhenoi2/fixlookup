@@ -19,18 +19,44 @@ const problemPaths = [
   "/en/dishwashers/problems/dishwasher-not-drying/",
   "/en/dishwashers/problems/white-residue-on-dishes/",
   "/en/dishwashers/problems/dishwasher-tablet-not-dissolving/",
+  "/en/dishwashers/problems/dishwasher-making-unusual-noise/",
+  "/en/dishwashers/problems/dishwasher-door-will-not-close/",
+  "/en/dishwashers/problems/dishwasher-has-no-power/",
+  "/en/dishwashers/problems/dishwasher-not-heating-water/",
+  "/en/dishwashers/problems/dishwasher-excessive-foam-suds/",
+  "/en/dishwashers/problems/dishwasher-smells-bad/",
 ];
 
 const errorCodePaths = [
   "/en/dishwashers/bosch/e15/",
   "/en/dishwashers/bosch/e24/",
+  "/en/dishwashers/bosch/e12/",
+  "/en/dishwashers/bosch/e16/",
+  "/en/dishwashers/bosch/e18/",
+  "/en/dishwashers/bosch/e22/",
+  "/en/dishwashers/bosch/e25/",
   "/en/dishwashers/siemens/e15/",
+  "/en/dishwashers/siemens/e12/",
+  "/en/dishwashers/siemens/e14/",
+  "/en/dishwashers/siemens/e16/",
+  "/en/dishwashers/siemens/e18/",
+  "/en/dishwashers/siemens/e22/",
+  "/en/dishwashers/siemens/e24/",
   "/en/dishwashers/electrolux/i20/",
   "/en/dishwashers/electrolux/i30/",
+  "/en/dishwashers/electrolux/i10/",
+  "/en/dishwashers/electrolux/i40/",
+  "/en/dishwashers/electrolux/if0/",
   "/en/dishwashers/samsung/4c-4e/",
   "/en/dishwashers/samsung/5c-5e/",
   "/en/dishwashers/samsung/lc-le/",
+  "/en/dishwashers/samsung/oc/",
   "/en/dishwashers/whirlpool/f8e4/",
+  "/en/dishwashers/whirlpool/f9e1/",
+  "/en/dishwashers/whirlpool/h2o/",
+  "/en/dishwashers/lg/ae/",
+  "/en/dishwashers/lg/ie/",
+  "/en/dishwashers/lg/oe/",
 ];
 
 const manufacturerPaths = [
@@ -39,6 +65,7 @@ const manufacturerPaths = [
   "/en/dishwashers/electrolux/",
   "/en/dishwashers/whirlpool/",
   "/en/dishwashers/samsung/",
+  "/en/dishwashers/lg/",
 ];
 
 const governancePaths = [
@@ -173,15 +200,16 @@ test("renders locale-aware category, manufacturer, and search links", async () =
   const category = await expectPage("/en/dishwashers/", [
     /Dishwasher troubleshooting/,
     /Choose the name on your appliance/,
-    /8(?:<!-- -->)? reviewed topics/,
+    /14(?:<!-- -->)? reviewed topics/,
     /href="\/en\/dishwashers\/bosch\/"/,
     /href="\/en\/dishwashers\/problems\/dishwasher-not-draining\/"/,
   ]);
-  assert.ok((category.match(/Source verified/g) ?? []).length >= 8);
+  assert.ok((category.match(/Source verified/g) ?? []).length >= 14);
 
-  await expectPage("/en/dishwashers/bosch/", [/Bosch(?:<!-- -->)? dishwashers/, /No verified models published yet/, /E15/, /E24/]);
-  await expectPage("/en/dishwashers/electrolux/", [/Electrolux(?:<!-- -->)? dishwashers/, /i20/, /C2/, /i30/]);
-  await expectPage("/en/dishwashers/samsung/", [/4C \/ 4E/, /5C \/ 5E/, /LC \/ LE/]);
+  await expectPage("/en/dishwashers/bosch/", [/Bosch(?:<!-- -->)? dishwashers/, /No verified models published yet/, /E15/, /E24/, /E12/, /E25/]);
+  await expectPage("/en/dishwashers/electrolux/", [/Electrolux(?:<!-- -->)? dishwashers/, /i20/, /C2/, /i30/, /i40/, /iF0/]);
+  await expectPage("/en/dishwashers/samsung/", [/4C \/ 4E/, /5C \/ 5E/, /LC \/ LE/, /OC \/ 0C \/ oE/]);
+  await expectPage("/en/dishwashers/lg/", [/LG(?:<!-- -->)? dishwashers/, /AE \/ EI \/ FE \/ RE/, /IE water-inlet/, /OE water-outlet/]);
 });
 
 test("trust pages explain the editorial, safety, correction, and contact boundaries", async () => {
@@ -231,7 +259,7 @@ test("manufacturer code pages reuse canonical guides rather than duplicate steps
   const boschE15 = await expectPage(errorCodePaths[0], [
     /Bosch(?:<!-- -->)? E15/,
     /safety switch detected water/,
-    /No model family is assigned/,
+    /confirm E15 in the official manual for the exact dishwasher/i,
     /Bosch US dishwasher support/,
     /href="\/en\/dishwashers\/problems\/dishwasher-leaking\/"/,
   ]);
@@ -243,6 +271,21 @@ test("manufacturer code pages reuse canonical guides rather than duplicate steps
     const html = await expectPage(path, [/Source verified/, /Applicability boundary/, /Sources &amp; references/, /Source scope/]);
     assert.doesNotMatch(html, /name="robots" content="noindex/);
   }
+});
+
+test("the nine pre-Phase-1A records keep their established URLs and meanings", async () => {
+  const legacyMeanings = new Map([
+    ["/en/dishwashers/bosch/e15/", /safety switch detected water in the dishwasher base/],
+    ["/en/dishwashers/bosch/e24/", /drainage problem/],
+    ["/en/dishwashers/siemens/e15/", /water in the floor tub/],
+    ["/en/dishwashers/electrolux/i20/", /signals indicate a drainage problem/],
+    ["/en/dishwashers/electrolux/i30/", /internal leak with water in the appliance base/],
+    ["/en/dishwashers/samsung/4c-4e/", /water-supply issue codes/],
+    ["/en/dishwashers/samsung/5c-5e/", /drainage issue codes/],
+    ["/en/dishwashers/samsung/lc-le/", /leak issue codes/],
+    ["/en/dishwashers/whirlpool/f8e4/", /water detected in the drip tray/],
+  ]);
+  for (const [path, meaning] of legacyMeanings) await expectPage(path, [meaning, /Source verified/]);
 });
 
 test("all indexable pages have unique locale-aware metadata and valid Open Graph tags", async () => {
@@ -363,6 +406,12 @@ test("legacy and unknown records return real 404s without competing metadata", a
     "/en/dishwashers/bosch/models/example-dw-100/",
     "/en/dishwashers/problems/demo-not-starting/",
     "/en/dishwashers/bosch/demo-01/",
+    "/en/dishwashers/bosch/e17/",
+    "/en/dishwashers/siemens/e25/",
+    "/en/dishwashers/electrolux/al6/",
+    "/en/dishwashers/samsung/5e/",
+    "/en/dishwashers/whirlpool/f8-e4/",
+    "/en/dishwashers/lg/ei/",
   ]) {
     const response = await render(path);
     assert.equal(response.status, 404, `${path} should not resolve`);
