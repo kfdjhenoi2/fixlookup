@@ -11,8 +11,6 @@ const configuredUrl =
 
 export const siteConfig = {
   name: "FixOrReplace",
-  description:
-    "Structured, source-aware troubleshooting for household appliances and consumer devices.",
   url: normalizeSiteUrl(configuredUrl),
 };
 

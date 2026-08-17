@@ -1,29 +1,35 @@
 import Link from "next/link";
+import type { DeviceCategory } from "@/lib/types";
+import type { Locale } from "@/lib/i18n/config";
+import { paths } from "@/lib/i18n/routing";
 
-export function SiteFooter() {
+export function SiteFooter({
+  locale,
+  category,
+  messages,
+}: {
+  locale: Locale;
+  category: DeviceCategory;
+  messages: Record<string, string>;
+}) {
   return (
     <footer className="site-footer">
       <div className="site-shell footer-grid">
         <div>
-          <Link className="brand footer-brand" href="/">
-            <span className="brand-mark" aria-hidden="true">
-              F/R
-            </span>
+          <Link className="brand footer-brand" href={paths.home(locale)}>
+            <span className="brand-mark" aria-hidden="true">F/R</span>
             <span>FixOrReplace</span>
           </Link>
-          <p className="footer-note">
-            Structured troubleshooting built around sources, safety, and clear
-            uncertainty.
-          </p>
+          <p className="footer-note">{messages.footerNote}</p>
         </div>
-        <nav className="footer-links" aria-label="Footer navigation">
-          <Link href="/devices">Browse devices</Link>
-          <Link href="/dishwashers">Dishwashers</Link>
-          <Link href="/dishwashers/troubleshooter">Try the framework</Link>
+        <nav className="footer-links" aria-label={messages.footerNavigation}>
+          <Link href={paths.devices(locale)}>{messages.footerBrowseDevices}</Link>
+          <Link href={paths.category(locale, category)}>{messages.navDishwashers}</Link>
+          <Link href={paths.troubleshooter(locale, category)}>{messages.footerTryFramework}</Link>
         </nav>
         <div className="footer-status">
           <span className="status-dot" aria-hidden="true" />
-          Published guidance is source-reviewed; compatibility is never inferred.
+          {messages.footerStatus}
         </div>
       </div>
     </footer>

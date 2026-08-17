@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { TroubleshooterNode } from "@/lib/types";
 
-export function Troubleshooter({ nodes }: { nodes: TroubleshooterNode[] }) {
+export function Troubleshooter({
+  nodes,
+  messages,
+}: {
+  nodes: TroubleshooterNode[];
+  messages: Record<string, string>;
+}) {
   const [currentId, setCurrentId] = useState("start");
   const [history, setHistory] = useState<string[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -20,7 +26,6 @@ export function Troubleshooter({ nodes }: { nodes: TroubleshooterNode[] }) {
     setHistory((current) => [...current, currentId]);
     setCurrentId(nextNodeId);
   }
-
   function goBack() {
     const previousId = history.at(-1);
     if (!previousId) return;
@@ -28,7 +33,6 @@ export function Troubleshooter({ nodes }: { nodes: TroubleshooterNode[] }) {
     setHistory((current) => current.slice(0, -1));
     setCurrentId(previousId);
   }
-
   function reset() {
     shouldMoveFocus.current = true;
     setHistory([]);
@@ -38,46 +42,29 @@ export function Troubleshooter({ nodes }: { nodes: TroubleshooterNode[] }) {
 
   return (
     <div className="troubleshooter-card">
-      <div
-        className="troubleshooter-progress"
-        role="progressbar"
-        aria-label="Troubleshooter progress"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={progress}
-      >
+      <div className="troubleshooter-progress" role="progressbar" aria-label={messages.troubleshooterProgress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
         <span style={{ width: `${progress}%` }} />
       </div>
       <div className="troubleshooter-content" aria-live="polite">
         <span className="eyebrow">{node.eyebrow}</span>
         <h2 ref={headingRef} tabIndex={-1}>{node.title}</h2>
         <p>{node.body}</p>
-
         {node.kind === "question" ? (
           <div className="choice-list">
             {node.options.map((option) => (
-              <button type="button" key={option.label} onClick={() => choose(option.nextNodeId)}>
-                <span>{option.label}</span>
-                <span aria-hidden="true">→</span>
+              <button type="button" key={option.nextNodeId} onClick={() => choose(option.nextNodeId)}>
+                <span>{option.label}</span><span aria-hidden="true">→</span>
               </button>
             ))}
           </div>
         ) : null}
-
         {node.kind === "outcome" ? (
-          <div className={`outcome-note outcome-${node.safetyLevel}`}>
-            This framework intentionally stops before unverified or internal
-            repair guidance.
-          </div>
+          <div className={`outcome-note outcome-${node.safetyLevel}`}>{messages.troubleshooterBoundary}</div>
         ) : null}
       </div>
       <div className="troubleshooter-controls">
-        <button type="button" className="button-secondary" onClick={goBack} disabled={!history.length}>
-          Back
-        </button>
-        <button type="button" className="button-quiet" onClick={reset}>
-          Start over
-        </button>
+        <button type="button" className="button-secondary" onClick={goBack} disabled={!history.length}>{messages.back}</button>
+        <button type="button" className="button-quiet" onClick={reset}>{messages.startOver}</button>
       </div>
     </div>
   );

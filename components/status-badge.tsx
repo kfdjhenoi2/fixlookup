@@ -1,23 +1,21 @@
 import type { SafetyLevel, VerificationStatus } from "@/lib/types";
 
-const verificationLabels: Record<VerificationStatus, string> = {
-  demo: "Demo record",
-  "needs-review": "Source review needed",
-  verified: "Source verified",
-};
-
-const safetyLabels: Record<SafetyLevel, string> = {
-  "user-safe": "User-level",
-  caution: "Use caution",
-  "professional-only": "Professional help",
-};
-
-export function VerificationBadge({ status }: { status: VerificationStatus }) {
-  return (
-    <span className={`badge badge-${status}`}>{verificationLabels[status]}</span>
-  );
+export function VerificationBadge({
+  status,
+  labels,
+}: {
+  status: VerificationStatus;
+  labels: Record<string, string>;
+}) {
+  return <span className={`badge badge-${status}`}>{labels[status]}</span>;
 }
 
-export function SafetyBadge({ level }: { level: SafetyLevel }) {
-  return <span className={`badge safety-${level}`}>{safetyLabels[level]}</span>;
+export function SafetyBadge({
+  level,
+  labels,
+}: {
+  level: SafetyLevel;
+  labels: Record<string, string>;
+}) {
+  return <span className={`badge safety-${level}`}>{labels[level]}</span>;
 }

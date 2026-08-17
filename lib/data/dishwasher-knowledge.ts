@@ -1,0 +1,347 @@
+import type {
+  DeviceCategoryKnowledge,
+  DeviceModelKnowledge,
+  ErrorCodeKnowledge,
+  ManufacturerKnowledge,
+  ModelFamilyKnowledge,
+  ProblemKnowledge,
+  SourceKnowledge,
+  TroubleshooterKnowledgeNode,
+  TroubleshootingGuideKnowledge,
+} from "../types";
+
+const categoryId = "category-dishwashers";
+const reviewed = "2026-08-17";
+const accessedAt = "2026-08-17";
+
+export const categoryKnowledge: DeviceCategoryKnowledge[] = [
+  {
+    id: categoryId,
+    manufacturerIds: [
+      "manufacturer-bosch",
+      "manufacturer-siemens",
+      "manufacturer-electrolux",
+      "manufacturer-whirlpool",
+      "manufacturer-samsung",
+    ],
+  },
+];
+
+export const manufacturerKnowledge: ManufacturerKnowledge[] = [
+  "bosch",
+  "siemens",
+  "electrolux",
+  "whirlpool",
+  "samsung",
+].map((slug) => ({
+  id: `manufacturer-${slug}`,
+  categoryIds: [categoryId],
+}));
+
+export const modelFamilyKnowledge: ModelFamilyKnowledge[] = [];
+export const modelKnowledge: DeviceModelKnowledge[] = [];
+
+export const problemKnowledge: ProblemKnowledge[] = [
+  {
+    id: "problem-dishwasher-not-draining",
+    categoryId,
+    guideId: "guide-dishwasher-not-draining",
+    sourceIds: ["source-bosch-not-draining", "source-electrolux-drain-i20", "source-whirlpool-not-draining"],
+    relatedProblemIds: ["problem-dishwasher-not-filling", "problem-dishwasher-leaking", "problem-dishwasher-not-starting"],
+    safetyLevel: "caution",
+    verificationStatus: "verified",
+  },
+  {
+    id: "problem-dishwasher-not-filling",
+    categoryId,
+    guideId: "guide-dishwasher-not-filling",
+    sourceIds: ["source-electrolux-inlet-i10", "source-whirlpool-not-filling"],
+    relatedProblemIds: ["problem-dishwasher-not-draining", "problem-dishwasher-not-starting", "problem-dishwasher-leaking"],
+    safetyLevel: "caution",
+    verificationStatus: "verified",
+  },
+  {
+    id: "problem-dishwasher-leaking",
+    categoryId,
+    guideId: "guide-dishwasher-leaking",
+    sourceIds: ["source-electrolux-leaking", "source-electrolux-i30", "source-whirlpool-f8e4", "source-samsung-water-codes"],
+    relatedProblemIds: ["problem-dishwasher-not-filling", "problem-dishwasher-not-draining", "problem-dishwasher-not-starting"],
+    safetyLevel: "caution",
+    verificationStatus: "verified",
+  },
+  {
+    id: "problem-dishwasher-not-starting",
+    categoryId,
+    guideId: "guide-dishwasher-not-starting",
+    sourceIds: ["source-bosch-troubleshooting", "source-electrolux-not-starting", "source-whirlpool-not-starting"],
+    relatedProblemIds: ["problem-dishwasher-not-filling", "problem-dishwasher-not-draining", "problem-dishwasher-leaking"],
+    safetyLevel: "caution",
+    verificationStatus: "verified",
+  },
+  {
+    id: "problem-dishwasher-not-cleaning",
+    categoryId,
+    guideId: "guide-dishwasher-not-cleaning",
+    sourceIds: ["source-bosch-not-cleaning", "source-electrolux-not-cleaning", "source-whirlpool-not-cleaning"],
+    relatedProblemIds: ["problem-white-residue", "problem-dishwasher-tablet-not-dissolving", "problem-dishwasher-not-drying"],
+    safetyLevel: "user-safe",
+    verificationStatus: "verified",
+  },
+  {
+    id: "problem-dishwasher-not-drying",
+    categoryId,
+    guideId: "guide-dishwasher-not-drying",
+    sourceIds: ["source-bosch-wet-dishes", "source-electrolux-not-drying", "source-whirlpool-not-drying"],
+    relatedProblemIds: ["problem-white-residue", "problem-dishwasher-not-cleaning", "problem-dishwasher-tablet-not-dissolving"],
+    safetyLevel: "user-safe",
+    verificationStatus: "verified",
+  },
+  {
+    id: "problem-white-residue",
+    categoryId,
+    guideId: "guide-white-residue",
+    sourceIds: ["source-electrolux-white-residue", "source-whirlpool-dull-dishes"],
+    relatedProblemIds: ["problem-dishwasher-not-cleaning", "problem-dishwasher-not-drying", "problem-dishwasher-tablet-not-dissolving"],
+    safetyLevel: "user-safe",
+    verificationStatus: "verified",
+  },
+  {
+    id: "problem-dishwasher-tablet-not-dissolving",
+    categoryId,
+    guideId: "guide-dishwasher-tablet-not-dissolving",
+    sourceIds: ["source-electrolux-tablet", "source-whirlpool-detergent-remains"],
+    relatedProblemIds: ["problem-dishwasher-not-cleaning", "problem-white-residue", "problem-dishwasher-not-drying"],
+    safetyLevel: "user-safe",
+    verificationStatus: "verified",
+  },
+];
+
+const error = (
+  id: string,
+  code: string,
+  aliases: string[],
+  manufacturerId: string,
+  guideId: string,
+  sourceIds: string[],
+  signalIds: string[] = [],
+): ErrorCodeKnowledge => ({
+  id,
+  code,
+  aliases,
+  signalIds,
+  categoryId,
+  manufacturerId,
+  modelFamilyIds: [],
+  guideId,
+  sourceIds,
+  verificationStatus: "verified",
+  isFictional: false,
+});
+
+export const errorCodeKnowledge: ErrorCodeKnowledge[] = [
+  error("error-bosch-e15", "E15", [], "manufacturer-bosch", "guide-dishwasher-leaking", ["source-bosch-e15"]),
+  error("error-bosch-e24", "E24", [], "manufacturer-bosch", "guide-dishwasher-not-draining", ["source-bosch-e24"]),
+  error("error-siemens-e15", "E15", [], "manufacturer-siemens", "guide-dishwasher-leaking", ["source-siemens-error-codes"]),
+  error("error-electrolux-i20", "i20", ["C2", "F2", "AL6"], "manufacturer-electrolux", "guide-dishwasher-not-draining", ["source-electrolux-drain-i20"], ["two-beeps", "two-led-flashes"]),
+  error("error-electrolux-i30", "i30", [], "manufacturer-electrolux", "guide-dishwasher-leaking", ["source-electrolux-i30"], ["three-beeps", "three-led-flashes"]),
+  error("error-samsung-4c", "4C", ["4E"], "manufacturer-samsung", "guide-dishwasher-not-filling", ["source-samsung-water-codes"]),
+  error("error-samsung-5c", "5C", ["5E"], "manufacturer-samsung", "guide-dishwasher-not-draining", ["source-samsung-water-codes"]),
+  error("error-samsung-lc", "LC", ["LE"], "manufacturer-samsung", "guide-dishwasher-leaking", ["source-samsung-water-codes"]),
+  error("error-whirlpool-f8e4", "F8E4", ["F8 E4"], "manufacturer-whirlpool", "guide-dishwasher-leaking", ["source-whirlpool-f8e4"]),
+];
+
+const step = (
+  id: string,
+  sourceIds: string[],
+  safetyLevel: "user-safe" | "caution" | "professional-only",
+) => ({ id, sourceIds, safetyLevel });
+
+export const guideKnowledge: TroubleshootingGuideKnowledge[] = [
+  {
+    id: "guide-dishwasher-not-draining",
+    categoryId,
+    canonicalProblemId: "problem-dishwasher-not-draining",
+    problemIds: ["problem-dishwasher-not-draining"],
+    errorCodeIds: ["error-bosch-e24", "error-electrolux-i20", "error-samsung-5c"],
+    safetyLevel: "caution",
+    verificationStatus: "verified",
+    lastReviewed: reviewed,
+    sourceIds: ["source-bosch-not-draining", "source-bosch-e24", "source-electrolux-drain-i20", "source-whirlpool-not-draining", "source-samsung-water-codes"],
+    steps: [
+      step("drain-stop-for-hazards", ["source-whirlpool-not-draining"], "caution"),
+      step("drain-clean-filter", ["source-bosch-not-draining", "source-electrolux-drain-i20", "source-whirlpool-not-draining"], "caution"),
+      step("drain-check-visible-route", ["source-bosch-e24", "source-electrolux-drain-i20", "source-whirlpool-not-draining"], "caution"),
+      step("drain-escalate", ["source-bosch-not-draining", "source-electrolux-drain-i20", "source-whirlpool-not-draining", "source-samsung-water-codes"], "professional-only"),
+    ],
+  },
+  {
+    id: "guide-dishwasher-not-filling",
+    categoryId,
+    canonicalProblemId: "problem-dishwasher-not-filling",
+    problemIds: ["problem-dishwasher-not-filling"],
+    errorCodeIds: ["error-samsung-4c"],
+    safetyLevel: "caution",
+    verificationStatus: "verified",
+    lastReviewed: reviewed,
+    sourceIds: ["source-electrolux-inlet-i10", "source-whirlpool-not-filling", "source-samsung-water-codes"],
+    steps: [
+      step("fill-check-tap", ["source-electrolux-inlet-i10", "source-whirlpool-not-filling"], "user-safe"),
+      step("fill-check-visible-hose", ["source-electrolux-inlet-i10", "source-samsung-water-codes"], "caution"),
+      step("fill-check-door", ["source-whirlpool-not-filling"], "user-safe"),
+      step("fill-escalate", ["source-electrolux-inlet-i10", "source-whirlpool-not-filling", "source-samsung-water-codes"], "professional-only"),
+    ],
+  },
+  {
+    id: "guide-dishwasher-leaking",
+    categoryId,
+    canonicalProblemId: "problem-dishwasher-leaking",
+    problemIds: ["problem-dishwasher-leaking"],
+    errorCodeIds: ["error-bosch-e15", "error-siemens-e15", "error-electrolux-i30", "error-samsung-lc", "error-whirlpool-f8e4"],
+    safetyLevel: "caution",
+    verificationStatus: "verified",
+    lastReviewed: reviewed,
+    sourceIds: ["source-bosch-e15", "source-siemens-error-codes", "source-electrolux-leaking", "source-electrolux-i30", "source-whirlpool-f8e4", "source-samsung-water-codes"],
+    steps: [
+      step("leak-stop-water", ["source-bosch-e15", "source-siemens-error-codes", "source-electrolux-i30", "source-whirlpool-f8e4"], "caution"),
+      step("leak-check-suds", ["source-whirlpool-f8e4", "source-samsung-water-codes"], "user-safe"),
+      step("leak-check-accessible-causes", ["source-electrolux-leaking", "source-electrolux-i30"], "caution"),
+      step("leak-escalate", ["source-bosch-e15", "source-siemens-error-codes", "source-electrolux-i30", "source-whirlpool-f8e4", "source-samsung-water-codes"], "professional-only"),
+    ],
+  },
+  {
+    id: "guide-dishwasher-not-starting",
+    categoryId,
+    canonicalProblemId: "problem-dishwasher-not-starting",
+    problemIds: ["problem-dishwasher-not-starting"],
+    errorCodeIds: [],
+    safetyLevel: "caution",
+    verificationStatus: "verified",
+    lastReviewed: reviewed,
+    sourceIds: ["source-bosch-troubleshooting", "source-electrolux-not-starting", "source-whirlpool-not-starting"],
+    steps: [
+      step("start-record-state", ["source-bosch-troubleshooting"], "caution"),
+      step("start-check-door", ["source-bosch-troubleshooting", "source-electrolux-not-starting", "source-whirlpool-not-starting"], "user-safe"),
+      step("start-check-controls", ["source-electrolux-not-starting", "source-whirlpool-not-starting"], "user-safe"),
+      step("start-model-reset", ["source-electrolux-not-starting", "source-whirlpool-not-starting"], "caution"),
+    ],
+  },
+  {
+    id: "guide-dishwasher-not-cleaning",
+    categoryId,
+    canonicalProblemId: "problem-dishwasher-not-cleaning",
+    problemIds: ["problem-dishwasher-not-cleaning"],
+    errorCodeIds: [],
+    safetyLevel: "user-safe",
+    verificationStatus: "verified",
+    lastReviewed: reviewed,
+    sourceIds: ["source-bosch-not-cleaning", "source-electrolux-not-cleaning", "source-whirlpool-not-cleaning"],
+    steps: [
+      step("clean-check-loading", ["source-bosch-not-cleaning", "source-whirlpool-not-cleaning"], "user-safe"),
+      step("clean-filter-arms", ["source-bosch-not-cleaning", "source-electrolux-not-cleaning", "source-whirlpool-not-cleaning"], "caution"),
+      step("clean-program-detergent", ["source-electrolux-not-cleaning", "source-whirlpool-not-cleaning"], "user-safe"),
+      step("clean-escalate", ["source-bosch-not-cleaning", "source-electrolux-not-cleaning", "source-whirlpool-not-cleaning"], "professional-only"),
+    ],
+  },
+  {
+    id: "guide-dishwasher-not-drying",
+    categoryId,
+    canonicalProblemId: "problem-dishwasher-not-drying",
+    problemIds: ["problem-dishwasher-not-drying"],
+    errorCodeIds: [],
+    safetyLevel: "user-safe",
+    verificationStatus: "verified",
+    lastReviewed: reviewed,
+    sourceIds: ["source-bosch-wet-dishes", "source-electrolux-not-drying", "source-whirlpool-not-drying"],
+    steps: [
+      step("dry-check-cycle", ["source-bosch-wet-dishes", "source-electrolux-not-drying", "source-whirlpool-not-drying"], "user-safe"),
+      step("dry-check-rinse-aid", ["source-bosch-wet-dishes", "source-electrolux-not-drying", "source-whirlpool-not-drying"], "user-safe"),
+      step("dry-check-loading", ["source-bosch-wet-dishes", "source-electrolux-not-drying", "source-whirlpool-not-drying"], "user-safe"),
+      step("dry-escalate", ["source-bosch-wet-dishes", "source-electrolux-not-drying", "source-whirlpool-not-drying"], "professional-only"),
+    ],
+  },
+  {
+    id: "guide-white-residue",
+    categoryId,
+    canonicalProblemId: "problem-white-residue",
+    problemIds: ["problem-white-residue"],
+    errorCodeIds: [],
+    safetyLevel: "user-safe",
+    verificationStatus: "verified",
+    lastReviewed: reviewed,
+    sourceIds: ["source-electrolux-white-residue", "source-whirlpool-dull-dishes"],
+    steps: [
+      step("residue-test-film", ["source-electrolux-white-residue", "source-whirlpool-dull-dishes"], "user-safe"),
+      step("residue-check-hardness", ["source-electrolux-white-residue"], "user-safe"),
+      step("residue-check-dosing", ["source-electrolux-white-residue", "source-whirlpool-dull-dishes"], "user-safe"),
+      step("residue-recognize-etching", ["source-whirlpool-dull-dishes"], "user-safe"),
+    ],
+  },
+  {
+    id: "guide-dishwasher-tablet-not-dissolving",
+    categoryId,
+    canonicalProblemId: "problem-dishwasher-tablet-not-dissolving",
+    problemIds: ["problem-dishwasher-tablet-not-dissolving"],
+    errorCodeIds: [],
+    safetyLevel: "user-safe",
+    verificationStatus: "verified",
+    lastReviewed: reviewed,
+    sourceIds: ["source-electrolux-tablet", "source-whirlpool-detergent-remains"],
+    steps: [
+      step("tablet-dry-dispenser", ["source-electrolux-tablet", "source-whirlpool-detergent-remains"], "user-safe"),
+      step("tablet-clear-door", ["source-electrolux-tablet", "source-whirlpool-detergent-remains"], "user-safe"),
+      step("tablet-match-cycle", ["source-electrolux-tablet"], "user-safe"),
+      step("tablet-escalate", ["source-electrolux-tablet", "source-whirlpool-detergent-remains"], "professional-only"),
+    ],
+  },
+];
+
+const source = (
+  id: string,
+  publisher: string,
+  url: string,
+  publishedAt?: string,
+): SourceKnowledge => ({
+  id,
+  publisher,
+  type: "manufacturer-support",
+  url,
+  publishedAt,
+  accessedAt,
+  verificationStatus: "verified",
+});
+
+export const sourceKnowledge: SourceKnowledge[] = [
+  source("source-bosch-not-draining", "Bosch US", "https://www.bosch-home.com/us/owner-support/get-support/support-selfhelp-dishwasher-not-drain"),
+  source("source-bosch-troubleshooting", "Bosch US", "https://www.bosch-home.com/us/owner-support/dishwashers/troubleshooting"),
+  source("source-bosch-not-cleaning", "Bosch US", "https://www.bosch-home.com/us/owner-support/get-support/support-selfhelp-dishwasher-not-cleaning-dishes"),
+  source("source-bosch-wet-dishes", "Bosch US", "https://www.bosch-home.com/us/owner-support/get-support/support-selfhelp-dishwashers-with-dishes-wet"),
+  source("source-bosch-e15", "Bosch US", "https://www.bosch-home.com/us/owner-support/get-support/support-selfhelp-dishwasher-error-e15"),
+  source("source-bosch-e24", "Bosch US", "https://www.bosch-home.com/us/owner-support/get-support/support-selfhelp-dishwasher-error-e24"),
+  source("source-siemens-error-codes", "Siemens Home Ireland", "https://www.siemens-home.bsh-group.com/ie/customer-service/support/troubleshooting/problems/dishcare/dishcare-error-codes"),
+  source("source-electrolux-inlet-i10", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-displays-error-code-i10-i11-al5-c1-beeps-once-or-the-warning-light-flashes-once"),
+  source("source-electrolux-drain-i20", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-displays-error-code-i20-c2-f2-or-al6-or-beeps-twice-not-draining"),
+  source("source-electrolux-leaking", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-is-leaking"),
+  source("source-electrolux-i30", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-displays-error-code-i30"),
+  source("source-electrolux-not-starting", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-does-not-will-not-start-but-the-power-is-on"),
+  source("source-electrolux-not-cleaning", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-not-cleaning-properly"),
+  source("source-electrolux-not-drying", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-does-not-dry-or-dries-poorly"),
+  source("source-electrolux-white-residue", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-leaves-white-residue-on-dishes-and-cutlery"),
+  source("source-electrolux-tablet", "Electrolux UK", "https://support.electrolux.co.uk/support-articles/article/dishwasher-tablets-do-not-fully-dissolve-left-in-the-base"),
+  source("source-whirlpool-not-draining", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Product_Info/Dishwasher_Product_Assistance/Dishwasher_Not_Draining"),
+  source("source-whirlpool-not-filling", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Dishwasher/Cycle_Concerns/Cycle_Not_Advancing/Will_Not_Fill_with_Water/Will_Not_Fill_With_Water_-_Dishwasher"),
+  source("source-whirlpool-not-starting", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Product_Info/Dishwasher_Product_Assistance/Dishwasher_Not_Starting_or_Not_Operating"),
+  source("source-whirlpool-not-cleaning", "Whirlpool US", "https://www.whirlpool.com/blog/kitchen/dishwasher-not-cleaning.html"),
+  source("source-whirlpool-not-drying", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Dishwasher/Drying_Performance/Not_Drying_-_Dishwasher"),
+  source("source-whirlpool-dull-dishes", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Dishwasher/Wash_Performance/Other_Cookware_and_Dishes/Dull_Surfaces_on_Dishes"),
+  source("source-whirlpool-detergent-remains", "Whirlpool US", "https://producthelp.whirlpool.com/%40api/deki/pages/16729/pdf/Detergent%2BRemains%2Bat%2BEnd%2Bof%2BCycle%2B-%2BDishwasher.pdf"),
+  source("source-whirlpool-f8e4", "Whirlpool US", "https://producthelp.whirlpool.com/Dishwashers/Dishwasher/Leaking/Underneath_or_Behind/F8E4_-_Error_Code_-_Dishwasher"),
+  source("source-samsung-water-codes", "Samsung UK", "https://www.samsung.com/uk/support/home-appliances/5c-5e-4c-4e-and-lc-le-information-codes-on-my-dishwasher/", "2021-09-23"),
+];
+
+export const troubleshooterKnowledge: TroubleshooterKnowledgeNode[] = [
+  { id: "start", kind: "question", safetyLevel: "caution", nextNodeIds: ["stop", "details"] },
+  { id: "details", kind: "question", safetyLevel: "user-safe", nextNodeIds: ["sources", "record"] },
+  { id: "record", kind: "outcome", safetyLevel: "user-safe" },
+  { id: "sources", kind: "outcome", safetyLevel: "user-safe" },
+  { id: "stop", kind: "outcome", safetyLevel: "professional-only" },
+];

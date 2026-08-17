@@ -1,43 +1,28 @@
 import type { SourceReference } from "@/lib/types";
 import { VerificationBadge } from "./status-badge";
 
-const sourceTypeLabels: Record<SourceReference["type"], string> = {
-  "manufacturer-manual": "Manufacturer manual",
-  "manufacturer-support": "Manufacturer support",
-  "official-service-document": "Official service document",
-  "reputable-technical": "Technical source",
-  "editorial-placeholder": "Source placeholder",
-};
-
 export function ClaimSources({
   sourceIds,
   sources,
-  label = "Sources",
+  messages,
 }: {
   sourceIds: string[];
   sources: SourceReference[];
-  label?: string;
+  messages: Record<string, string>;
 }) {
   const linkedSources = [...new Set(sourceIds)]
     .map((sourceId) => sources.find((source) => source.id === sourceId))
     .filter((source): source is SourceReference => Boolean(source));
-
   if (!linkedSources.length) return null;
-
   return (
     <p className="claim-sources">
-      <span>{label}:</span>{" "}
+      <span>{messages.sources}:</span>{" "}
       {linkedSources.map((source, index) => {
-        const sourceNumber = sources.findIndex(
-          (candidate) => candidate.id === source.id,
-        ) + 1;
+        const sourceNumber = sources.findIndex((candidate) => candidate.id === source.id) + 1;
         return (
           <span key={source.id}>
             {index ? " " : null}
-            <a
-              href={`#source-${source.id}`}
-              aria-label={`${source.title}, source ${sourceNumber}`}
-            >
+            <a href={`#source-${source.id}`} aria-label={`${source.title}, ${messages.sourceRecord} ${sourceNumber}`}>
               [{sourceNumber}]
             </a>
           </span>
@@ -47,61 +32,50 @@ export function ClaimSources({
   );
 }
 
-export function SourceList({ sources }: { sources: SourceReference[] }) {
+export function SourceList({
+  sources,
+  messages,
+  sourceTypeLabels,
+  verificationLabels,
+}: {
+  sources: SourceReference[];
+  messages: Record<string, string>;
+  sourceTypeLabels: Record<string, string>;
+  verificationLabels: Record<string, string>;
+}) {
   return (
     <section className="source-panel" aria-labelledby="sources-heading">
       <div className="section-heading section-heading-compact">
         <div>
-          <span className="eyebrow">Traceability</span>
-          <h2 id="sources-heading">Sources &amp; references</h2>
+          <span className="eyebrow">{messages.traceability}</span>
+          <h2 id="sources-heading">{messages.sourcesReferences}</h2>
         </div>
         <span className="source-count">
-          {sources.length} {sources.length === 1 ? "record" : "records"}
+          {sources.length} {sources.length === 1 ? messages.sourceRecord : messages.sourceRecords}
         </span>
       </div>
       <div className="source-list">
         {sources.length ? sources.map((source) => (
-          <article
-            className="source-item"
-            id={`source-${source.id}`}
-            key={source.id}
-          >
+          <article className="source-item" id={`source-${source.id}`} key={source.id}>
             <div>
               <span className="source-type">{sourceTypeLabels[source.type]}</span>
               <h3>
                 {source.url ? (
                   <a href={source.url} rel="noreferrer" target="_blank">
-                    {source.title}
-                    <span className="sr-only"> (opens in a new tab)</span>
+                    {source.title}<span className="sr-only"> ({messages.opensNewTab})</span>
                   </a>
-                ) : (
-                  source.title
-                )}
+                ) : source.title}
               </h3>
               <p>
                 {source.publisher}
-                {source.publishedAt ? (
-                  <>
-                    {" · Published "}
-                    <time dateTime={source.publishedAt}>{source.publishedAt}</time>
-                  </>
-                ) : null}
-                {source.accessedAt ? (
-                  <>
-                    {" · Accessed "}
-                    <time dateTime={source.accessedAt}>{source.accessedAt}</time>
-                  </>
-                ) : null}
+                {source.publishedAt ? <>{" · "}{messages.published} <time dateTime={source.publishedAt}>{source.publishedAt}</time></> : null}
+                {source.accessedAt ? <>{" · "}{messages.accessed} <time dateTime={source.accessedAt}>{source.accessedAt}</time></> : null}
               </p>
               {source.note ? <p className="source-note">{source.note}</p> : null}
             </div>
-            <VerificationBadge status={source.verificationStatus} />
+            <VerificationBadge status={source.verificationStatus} labels={verificationLabels} />
           </article>
-        )) : (
-          <div className="source-empty">
-            No source is attached. This record is not eligible for publication.
-          </div>
-        )}
+        )) : <div className="source-empty">{messages.noSource}</div>}
       </div>
     </section>
   );

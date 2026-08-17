@@ -2,27 +2,27 @@ export type VerificationStatus = "demo" | "needs-review" | "verified";
 
 export type SafetyLevel = "user-safe" | "caution" | "professional-only";
 
-export interface DeviceCategory {
+export type SourceType =
+  | "manufacturer-manual"
+  | "manufacturer-support"
+  | "official-service-document"
+  | "reputable-technical"
+  | "editorial-placeholder";
+
+// Stable, language-independent knowledge records. Localized copy and slugs are
+// deliberately absent from these types.
+export interface DeviceCategoryKnowledge {
   id: string;
-  slug: string;
-  name: string;
-  singularName: string;
-  description: string;
   manufacturerIds: string[];
 }
 
-export interface Manufacturer {
+export interface ManufacturerKnowledge {
   id: string;
-  slug: string;
-  name: string;
   categoryIds: string[];
-  overview: string;
 }
 
-export interface ModelFamily {
+export interface ModelFamilyKnowledge {
   id: string;
-  slug: string;
-  name: string;
   categoryId: string;
   manufacturerId: string;
   modelIds: string[];
@@ -30,10 +30,8 @@ export interface ModelFamily {
   verificationStatus: VerificationStatus;
 }
 
-export interface DeviceModel {
+export interface DeviceModelKnowledge {
   id: string;
-  slug: string;
-  name: string;
   modelNumber: string;
   categoryId: string;
   manufacturerId: string;
@@ -42,16 +40,11 @@ export interface DeviceModel {
   sourceIds: string[];
   verificationStatus: VerificationStatus;
   isFictional: boolean;
-  note: string;
 }
 
-export interface Problem {
+export interface ProblemKnowledge {
   id: string;
-  slug: string;
-  title: string;
   categoryId: string;
-  summary: string;
-  symptomLabels: string[];
   guideId?: string;
   sourceIds: string[];
   relatedProblemIds: string[];
@@ -59,71 +52,138 @@ export interface Problem {
   verificationStatus: VerificationStatus;
 }
 
-export interface ErrorCode {
+export interface ErrorCodeKnowledge {
   id: string;
-  slug: string;
   code: string;
   aliases: string[];
-  title: string;
+  signalIds: string[];
   categoryId: string;
   manufacturerId: string;
   modelFamilyIds: string[];
-  summary: string;
-  sourceScope: string;
-  applicabilityNote: string;
   guideId?: string;
   sourceIds: string[];
   verificationStatus: VerificationStatus;
   isFictional: boolean;
 }
 
-export interface TroubleshootingStep {
+export interface TroubleshootingStepKnowledge {
   id: string;
-  title: string;
-  instruction: string;
   sourceIds: string[];
   safetyLevel: SafetyLevel;
 }
 
-export interface TroubleshootingGuide {
+export interface TroubleshootingGuideKnowledge {
   id: string;
-  slug: string;
-  title: string;
   categoryId: string;
   canonicalProblemId: string;
   problemIds: string[];
   errorCodeIds: string[];
-  steps: TroubleshootingStep[];
+  steps: TroubleshootingStepKnowledge[];
   sourceIds: string[];
   safetyLevel: SafetyLevel;
   verificationStatus: VerificationStatus;
   lastReviewed: string | null;
 }
 
-export type SourceType =
-  | "manufacturer-manual"
-  | "manufacturer-support"
-  | "official-service-document"
-  | "reputable-technical"
-  | "editorial-placeholder";
-
-export interface SourceReference {
+export interface SourceKnowledge {
   id: string;
-  title: string;
   publisher: string;
   type: SourceType;
   url?: string;
   publishedAt?: string;
   accessedAt?: string;
   verificationStatus: VerificationStatus;
+}
+
+export interface TroubleshooterKnowledgeNode {
+  id: string;
+  kind: "question" | "outcome";
+  safetyLevel: SafetyLevel;
+  nextNodeIds?: string[];
+}
+
+// Locale presentation records. These are joined to knowledge records by stable ID.
+export interface CategoryTranslation {
+  slug: string;
+  name: string;
+  singularName: string;
+  description: string;
+}
+
+export interface ManufacturerTranslation {
+  slug: string;
+  name: string;
+  overview: string;
+}
+
+export interface ModelFamilyTranslation {
+  slug: string;
+  name: string;
+}
+
+export interface ModelTranslation {
+  slug: string;
+  name: string;
+  note: string;
+}
+
+export interface ProblemTranslation {
+  slug: string;
+  title: string;
+  summary: string;
+  symptomLabels: string[];
+}
+
+export interface ErrorCodeTranslation {
+  slug: string;
+  title: string;
+  signalLabels: string[];
+  summary: string;
+  sourceScope: string;
+  applicabilityNote: string;
+}
+
+export interface GuideTranslation {
+  slug: string;
+  title: string;
+  steps: Record<string, { title: string; instruction: string }>;
+}
+
+export interface SourceTranslation {
+  title: string;
   note?: string;
 }
+
+export interface TroubleshooterTranslation {
+  eyebrow: string;
+  title: string;
+  body: string;
+  optionLabels?: string[];
+}
+
+// Locale-composed view models used by the UI.
+export interface DeviceCategory extends DeviceCategoryKnowledge, CategoryTranslation {}
+export interface Manufacturer extends ManufacturerKnowledge, ManufacturerTranslation {}
+export interface ModelFamily extends ModelFamilyKnowledge, ModelFamilyTranslation {}
+export interface DeviceModel extends DeviceModelKnowledge, ModelTranslation {}
+export interface Problem extends ProblemKnowledge, ProblemTranslation {}
+export interface ErrorCode extends ErrorCodeKnowledge, ErrorCodeTranslation {}
+export interface TroubleshootingStep extends TroubleshootingStepKnowledge {
+  title: string;
+  instruction: string;
+}
+export interface TroubleshootingGuide
+  extends Omit<TroubleshootingGuideKnowledge, "steps">,
+    Omit<GuideTranslation, "steps"> {
+  steps: TroubleshootingStep[];
+}
+export interface SourceReference extends SourceKnowledge, SourceTranslation {}
 
 export interface SearchItem {
   id: string;
   label: string;
   description: string;
-  type: "Device" | "Manufacturer" | "Model" | "Problem" | "Error code";
+  type: "device" | "manufacturer" | "model" | "problem" | "errorCode";
   href: string;
   keywords: string[];
   isDemo?: boolean;

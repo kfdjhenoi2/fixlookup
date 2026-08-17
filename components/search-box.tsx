@@ -5,41 +5,41 @@ import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { SearchItem } from "@/lib/types";
+import type { Locale } from "@/lib/i18n/config";
 
 export function SearchBox({
   items,
+  locale,
+  messages,
+  typeLabels,
   compact = false,
 }: {
   items: SearchItem[];
+  locale: Locale;
+  messages: Record<string, string>;
+  typeLabels: Record<SearchItem["type"], string>;
   compact?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const router = useRouter();
   const inputId = useId();
   const resultsId = useId();
-  const normalizedQuery = query.trim().toLowerCase();
-
+  const normalizedQuery = query.trim().toLocaleLowerCase(locale);
   const results = useMemo(() => {
     if (!normalizedQuery) return [];
-
     return items
       .map((item) => {
-        const haystack = [
-          item.label,
-          item.description,
-          item.type,
-          ...item.keywords,
-        ]
+        const haystack = [item.label, item.description, typeLabels[item.type], ...item.keywords]
           .join(" ")
-          .toLowerCase();
-        const startsWithLabel = item.label.toLowerCase().startsWith(normalizedQuery);
+          .toLocaleLowerCase(locale);
+        const startsWithLabel = item.label.toLocaleLowerCase(locale).startsWith(normalizedQuery);
         return { item, rank: startsWithLabel ? 0 : haystack.includes(normalizedQuery) ? 1 : 2 };
       })
       .filter(({ rank }) => rank < 2)
       .sort((a, b) => a.rank - b.rank)
       .slice(0, 6)
       .map(({ item }) => item);
-  }, [items, normalizedQuery]);
+  }, [items, locale, normalizedQuery, typeLabels]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,29 +50,22 @@ export function SearchBox({
     <div className={`search-module ${compact ? "search-module-compact" : ""}`}>
       <form className="search-form" role="search" onSubmit={handleSubmit}>
         <span className="search-symbol" aria-hidden="true" />
-        <label className="sr-only" htmlFor={inputId}>
-          Search for a device, model, problem, or error code
-        </label>
+        <label className="sr-only" htmlFor={inputId}>{messages.searchLabel}</label>
         <input
           id={inputId}
           type="search"
           autoComplete="off"
-          placeholder="Try a brand, model, symptom, or code"
+          placeholder={messages.searchPlaceholder}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           aria-controls={normalizedQuery ? resultsId : undefined}
         />
-        <button type="submit" disabled={!results.length}>
-          Search
-        </button>
+        <button type="submit" disabled={!results.length}>{messages.searchButton}</button>
       </form>
-
       {normalizedQuery ? (
         <div className="search-results" id={resultsId}>
           <p className="sr-only" aria-live="polite">
-            {results.length
-              ? `${results.length} search ${results.length === 1 ? "result" : "results"}`
-              : "No reviewed search results"}
+            {results.length ? `${results.length} ${results.length === 1 ? messages.searchResult : messages.searchResults}` : messages.noSearchResults}
           </p>
           {results.length ? (
             <ul>
@@ -84,8 +77,7 @@ export function SearchBox({
                       <small>{result.description}</small>
                     </span>
                     <span className="result-type">
-                      {result.isDemo ? "Demo · " : ""}
-                      {result.type}
+                      {result.isDemo ? messages.demoPrefix : ""}{typeLabels[result.type]}
                     </span>
                   </Link>
                 </li>
@@ -93,8 +85,8 @@ export function SearchBox({
             </ul>
           ) : (
             <div className="empty-search">
-              <strong>No reviewed match yet</strong>
-              <span>Try a manufacturer name, a symptom such as “not draining,” or a code such as “E15.”</span>
+              <strong>{messages.noSearchMatch}</strong>
+              <span>{messages.searchSuggestion}</span>
             </div>
           )}
         </div>

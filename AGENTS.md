@@ -56,6 +56,14 @@ Use structured data for:
 
 Do not create duplicate content for individual models when multiple models share the same underlying problem or guide.
 
+## Internationalization
+
+- Keep one language-independent technical knowledge base keyed by stable IDs. Never duplicate technical claims, source relationships, safety levels or compatibility data per locale.
+- Keep localized copy, UI labels, metadata and slugs in locale modules. A translation must preserve the reviewed technical meaning and source boundary.
+- Every public page uses a locale prefix (`/en/`, later `/fi/`, etc.). `/` redirects to the default locale; do not infer locale from IP address.
+- `supportedLocales` is the publication gate. Do not create routes, sitemap entries, canonicals or `hreflang` alternates for a locale until its complete localized dataset is reviewed and enabled.
+- Build internal links, search results and troubleshooter presentation with the active locale. Resolve localized routes by stable entity ID, not by translating URLs ad hoc.
+
 ## Information quality
 
 Never invent:

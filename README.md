@@ -4,14 +4,17 @@ FixOrReplace is a source-aware troubleshooting index for household appliances an
 
 ## Architecture
 
-- `app/` contains server-rendered routes, metadata, sitemap, and robots output.
+- `app/` contains locale-prefixed server-rendered routes, metadata, sitemap, and robots output. `/` permanently redirects to `/en/`.
 - `components/` contains reusable UI plus the two client-side interactions: search and the troubleshooting flow.
 - `lib/types.ts` defines the normalized content entities.
-- `lib/data/` contains reviewed dishwasher records and primary-source references.
-- `lib/content.ts` provides publication gates, search indexing, and relationship validation.
+- `lib/data/` contains the language-independent dishwasher knowledge graph and primary-source relationships.
+- `lib/i18n/` contains supported-locale configuration, localized slugs, UI/SEO copy, and entity presentation records.
+- `lib/content.ts` joins knowledge to a locale and provides publication gates, locale-aware search indexing, and relationship validation.
 - `tests/` validates rendered routes, core templates, SEO output, and internal links.
 
 The content layer is intentionally static for the MVP. Its stable entity IDs and explicit relationships make it straightforward to move to a database or content pipeline without changing route semantics. Standard Next.js is the default development and production target; the retained vinext configuration provides a separate Sites-compatible build.
+
+English is the only enabled locale. To add another language, create a complete locale module matching `lib/i18n/en.ts`, register it in `lib/i18n/index.ts`, then add its code to `supportedLocales` in `lib/i18n/config.ts`. Routes, search, sitemap entries, canonicals, and language alternates are generated only for enabled locales.
 
 ## Local development
 
