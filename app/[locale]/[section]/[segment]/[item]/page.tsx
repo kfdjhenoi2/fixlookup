@@ -45,6 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: formatMessage(page.metaDescription, { summary: problem.summary }),
       path: paths.problem(locale, category, problem),
       openGraphType: "article",
+      includeSiteImage: false,
       pathForLocale: (candidate) => {
         const candidateContent = getCachedContent(candidate);
         const localizedCategory = candidateContent.getCategoryById(category.id);
@@ -57,12 +58,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const code = manufacturer && content.getErrorCodeBySlug(manufacturer.id, item);
   if (!manufacturer || !code || code.categoryId !== category.id || !content.isErrorCodeIndexable(code)) return {};
   const page = content.messages.pages.error;
+  const normalizeIdentifier = (value: string) => value.replace(/[^a-z0-9]/gi, "").toUpperCase();
+  const distinctAlias = code.aliases.length === 1 && normalizeIdentifier(code.aliases[0]) !== normalizeIdentifier(code.code)
+    ? code.aliases[0]
+    : undefined;
+  const titleCode = distinctAlias ? `${code.code}/${distinctAlias}` : code.code;
+  const expandedDescription = formatMessage(page.metaDescription, { summary: code.summary });
   return createPageMetadata({
     locale,
-    title: formatMessage(page.metaTitle, { name: manufacturer.name, code: code.code }),
-    description: formatMessage(page.metaDescription, { name: manufacturer.name, code: code.code }),
+    title: formatMessage(page.metaTitle, { name: manufacturer.name, code: titleCode }),
+    description: expandedDescription.length <= 170
+      ? expandedDescription
+      : formatMessage(page.metaDescriptionFallback, { name: manufacturer.name, code: titleCode }),
     path: paths.errorCode(locale, category, manufacturer, code),
     openGraphType: "article",
+    includeSiteImage: false,
     pathForLocale: (candidate) => {
       const candidateContent = getCachedContent(candidate);
       const localizedCategory = candidateContent.getCategoryById(category.id);

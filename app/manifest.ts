@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: siteConfig.name,
     short_name: siteConfig.name,
-    description: "Source-aware appliance troubleshooting with visible evidence and safety boundaries.",
+    description: "Look up dishwasher error codes, exact models, and common symptoms to find practical troubleshooting guidance.",
     start_url: "/en/",
     display: "standalone",
     background_color: "#f7f6f1",

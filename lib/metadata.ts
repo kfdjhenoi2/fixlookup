@@ -12,6 +12,7 @@ interface PageMetadataOptions {
   pathForLocale?: (locale: Locale) => string | undefined;
   noIndex?: boolean;
   openGraphType?: "website" | "article";
+  includeSiteImage?: boolean;
 }
 
 export function createPageMetadata({
@@ -22,9 +23,16 @@ export function createPageMetadata({
   pathForLocale = () => path,
   noIndex = false,
   openGraphType = "website",
+  includeSiteImage = true,
 }: PageMetadataOptions): Metadata {
   const socialTitle = `${title} | ${siteConfig.name}`;
   const preventIndexing = noIndex || shouldBlockIndexing();
+  const socialImages = includeSiteImage ? [{
+    url: absoluteUrl("/og.png"),
+    width: 1731,
+    height: 909,
+    alt: socialTitle,
+  }] : [];
   return {
     title,
     description,
@@ -40,18 +48,13 @@ export function createPageMetadata({
       title: socialTitle,
       description,
       url: path,
-      images: [{
-        url: absoluteUrl("/og.png"),
-        width: 1731,
-        height: 909,
-        alt: `${title} | ${siteConfig.name}`,
-      }],
+      images: socialImages,
     },
     twitter: {
-      card: "summary_large_image",
+      card: includeSiteImage ? "summary_large_image" : "summary",
       title: socialTitle,
       description,
-      images: [absoluteUrl("/og.png")],
+      images: includeSiteImage ? [absoluteUrl("/og.png")] : [],
     },
   };
 }

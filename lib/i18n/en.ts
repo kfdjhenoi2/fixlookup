@@ -258,8 +258,8 @@ export const en = {
     },
   },
   ui: {
-    siteDescription: "Structured, source-aware troubleshooting for household appliances and consumer devices.",
-    defaultTitle: "FixLookup — Appliance troubleshooting, with evidence",
+    siteDescription: "Look up dishwasher error codes, exact models, and common symptoms to find practical troubleshooting guidance.",
+    defaultTitle: "FixLookup — Dishwasher troubleshooting",
     skipToContent: "Skip to content",
     homeAria: "FixLookup home",
     primaryNavigation: "Primary navigation",
@@ -337,8 +337,8 @@ export const en = {
   },
   pages: {
     home: {
-      metaTitle: "Dishwasher model, error-code and symptom lookup",
-      metaDescription: "Search reviewed dishwasher model records, manufacturer error codes, and symptom guides with cited sources and clear safety boundaries.",
+      metaTitle: "Dishwasher error codes, models and troubleshooting",
+      metaDescription: "Search exact dishwasher models, error codes, or symptoms to find clear meanings, model information, and practical troubleshooting steps.",
       eyebrow: "Troubleshooting lookup",
       title: "Look up what's wrong with your appliance",
       intro: "Search by exact model number, error code, or symptom.",
@@ -384,8 +384,8 @@ export const en = {
       viewRecord: "View structured record →",
     },
     devices: {
-      metaTitle: "Browse devices",
-      metaDescription: "Browse the household device categories currently covered by FixLookup.",
+      metaTitle: "Appliance troubleshooting by device",
+      metaDescription: "Browse FixLookup by appliance type. Dishwasher error codes, exact models, and troubleshooting guides are available now.",
       breadcrumb: "Devices",
       eyebrow: "Device library",
       title: "Browse troubleshooting by device",
@@ -398,8 +398,8 @@ export const en = {
       moreBody: "The schema is ready to expand after the dishwasher content model and editorial workflow are validated.",
     },
     category: {
-      metaTitle: "Dishwasher troubleshooting",
-      metaDescription: "Browse source-reviewed dishwasher problem guides and manufacturer error-code records with claim-level references.",
+      metaTitle: "Dishwasher troubleshooting guides",
+      metaDescription: "Browse dishwasher error-code meanings, exact model pages, and practical guides for draining, filling, leaking, cleaning, and other common problems.",
       eyebrow: "Device category",
       title: "Dishwasher troubleshooting",
       intro: "Search source-reviewed symptom guides and manufacturer error-code records, or begin with the name on your appliance.",
@@ -416,8 +416,8 @@ export const en = {
     },
     manufacturer: {
       metaTitle: "{name} dishwasher troubleshooting",
-      metaDescription: "Browse evidence-checked {name} dishwasher model relationships, error-code records, and shared troubleshooting guides.",
-      metaDescriptionModels: "Browse evidence-checked {name} dishwasher model relationships and shared troubleshooting guides.",
+      metaDescription: "Find {name} dishwasher error codes, exact model pages, and practical troubleshooting guides for common symptoms.",
+      metaDescriptionModels: "Find exact {name} dishwasher model information, official manuals, and practical troubleshooting guides for common symptoms.",
       eyebrow: "Manufacturer index",
       title: "{name} dishwashers",
       modelEyebrow: "Model index",
@@ -443,8 +443,8 @@ export const en = {
     },
     model: {
       metaTitle: "{name} dishwasher troubleshooting",
-      metaDescription: "See the exact, manufacturer-sourced FixLookup record for {name}, including verified code and shared problem relationships.",
-      metaDescriptionNoCodes: "See the exact, manufacturer-sourced FixLookup record for {name}, including manual-supported shared problem relationships.",
+      metaDescription: "Find official manuals, verified error codes, and practical troubleshooting guides for the exact {name} dishwasher model.",
+      metaDescriptionNoCodes: "Find official manuals, exact model information, and practical troubleshooting guides for the {name} dishwasher.",
       eyebrow: "Exact dishwasher model record",
       identity: "Exact model identity",
       modelNumber: "Canonical model identifier",
@@ -469,7 +469,8 @@ export const en = {
     },
     error: {
       metaTitle: "{name} dishwasher {code} error code",
-      metaDescription: "Review the sourced meaning, applicability boundary, and safe next steps for the {name} dishwasher {code} record.",
+      metaDescription: "{summary} See the safe checks to try next.",
+      metaDescriptionFallback: "See what {name} dishwasher {code} means, which symptoms it covers, and the safe checks to try next.",
       eyebrow: "Manufacturer error-code record",
       codeLabel: "Error code",
       aliases: "Also documented as: {aliases}",
@@ -511,8 +512,8 @@ export const en = {
       boundaryBody: "No model compatibility is assumed; confirm manufacturer guidance in the manual for the exact appliance.",
     },
     about: {
-      metaTitle: "About FixLookup",
-      metaDescription: "Learn what FixLookup publishes, its current scope, and the evidence boundaries behind its appliance troubleshooting guidance.",
+      metaTitle: "About",
+      metaDescription: "Learn how FixLookup checks dishwasher troubleshooting information, uses official sources, and keeps model compatibility and safety limits clear.",
       breadcrumb: "About",
       eyebrow: "About FixLookup",
       title: "A focused index for source-aware troubleshooting.",
@@ -543,8 +544,8 @@ export const en = {
       correctionsBody: "Suspected errors can be reported through the corrections channel. Reports should identify the page, the exact statement, and an authoritative source when available.",
     },
     safety: {
-      metaTitle: "Safety policy",
-      metaDescription: "The FixLookup safety boundary for appliance troubleshooting and professional repair handoffs.",
+      metaTitle: "Dishwasher troubleshooting safety",
+      metaDescription: "See which dishwasher checks you can do safely, when to stop using the appliance, and when to contact qualified service.",
       breadcrumb: "Safety policy",
       eyebrow: "Safety policy",
       title: "Safe next steps come before complete instructions.",
@@ -580,7 +581,7 @@ export const en = {
     },
     contact: {
       metaTitle: "Corrections and contact",
-      metaDescription: "What to prepare for a future FixLookup correction report and the current availability of the project's contact channel.",
+      metaDescription: "Learn how to prepare a source-backed correction for FixLookup and check when the correction contact channel becomes available.",
       breadcrumb: "Corrections & contact",
       eyebrow: "Corrections and contact",
       title: "Help keep the record accurate.",

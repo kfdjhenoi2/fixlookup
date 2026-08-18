@@ -27,6 +27,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description: messages.ui.siteDescription,
     applicationName: siteConfig.name,
     category: "technology",
+    icons: {
+      icon: [{ url: "/icon", type: "image/png", sizes: "512x512" }],
+      apple: [{ url: "/apple-icon", type: "image/png", sizes: "180x180" }],
+    },
     robots: shouldBlockIndexing() ? { index: false, follow: false, nocache: true } : undefined,
     openGraph: {
       type: "website",

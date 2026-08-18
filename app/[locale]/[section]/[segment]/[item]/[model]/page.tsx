@@ -39,6 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: formatMessage(page.metaTitle, { name: model.name }),
     description: formatMessage(model.errorRelationships.length ? page.metaDescription : page.metaDescriptionNoCodes, { name: model.name }),
     path: paths.model(route.locale, category, manufacturer, model),
+    includeSiteImage: false,
     pathForLocale: (candidate) => {
       const candidateContent = getCachedContent(candidate);
       const localizedCategory = candidateContent.getCategoryById(category.id);

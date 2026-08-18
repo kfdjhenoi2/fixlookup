@@ -352,6 +352,7 @@ test("the nine pre-Phase-1A records keep their established URLs and meanings", a
 test("all indexable pages have unique locale-aware metadata and valid Open Graph tags", async () => {
   const titles = new Set();
   const descriptions = new Set();
+  const detailPaths = new Set([...modelPaths, ...problemPaths, ...errorCodePaths]);
   for (const path of indexablePaths) {
     const html = await expectPage(path, [
       /hreflang="en"/,
@@ -363,7 +364,13 @@ test("all indexable pages have unique locale-aware metadata and valid Open Graph
       /property="og:locale" content="en_US"/,
     ]);
     assert.ok(html.includes(`rel="canonical" href="${expectedOrigin}${path}"`));
-    assert.ok(html.includes(`property="og:image" content="${expectedOrigin}/og.png"`));
+    if (detailPaths.has(path)) {
+      assert.doesNotMatch(html, /property="og:image"|name="twitter:image"/, `${path} should not reuse the site image as a record image`);
+      assert.match(html, /name="twitter:card" content="summary"/);
+    } else {
+      assert.ok(html.includes(`property="og:image" content="${expectedOrigin}/og.png"`));
+      assert.match(html, /name="twitter:card" content="summary_large_image"/);
+    }
     assert.doesNotMatch(html, /hreflang="(?:fi|de|es|fr)"/);
     assert.doesNotMatch(html, /FixOrReplace|Fix Or Replace|fix-or-replace/i);
     assert.doesNotMatch(html, /Demo record|Source review needed|fictional template/i);
@@ -391,6 +398,36 @@ test("all indexable pages have unique locale-aware metadata and valid Open Graph
   const troubleshooter = await expectPage("/en/dishwashers/troubleshooter/", [/Safety and information checklist/, /name="robots" content="noindex, nofollow, nocache"/]);
   assert.match(troubleshooter, /No model compatibility is assumed/);
   assert.doesNotMatch(troubleshooter, /property="og:locale" content="en"/);
+});
+
+test("priority search pages use concise, consumer-facing metadata", async () => {
+  const expected = new Map([
+    ["/en/", ["Dishwasher error codes, models and troubleshooting | FixLookup", "Search exact dishwasher models, error codes, or symptoms"]],
+    ["/en/dishwashers/", ["Dishwasher troubleshooting guides | FixLookup", "Browse dishwasher error-code meanings, exact model pages"]],
+    ["/en/dishwashers/bosch/", ["Bosch dishwasher troubleshooting | FixLookup", "Find Bosch dishwasher error codes, exact model pages"]],
+    ["/en/dishwashers/bosch/e24/", ["Bosch dishwasher E24 error code | FixLookup", "Bosch describes E24 as a drainage problem"]],
+    ["/en/dishwashers/samsung/5c-5e/", ["Samsung dishwasher 5C/5E error code | FixLookup", "Samsung UK groups 5C and 5E as dishwasher drainage issue codes"]],
+    ["/en/dishwashers/siemens/models/sn25m889eu-55/", ["Siemens SN25M889EU/55 dishwasher troubleshooting | FixLookup", "Find official manuals, verified error codes"]],
+    ["/en/dishwashers/problems/dishwasher-not-draining/", ["Dishwasher not draining or leaving standing water | FixLookup", "Start with the removable filter"]],
+    ["/en/about/", ["About | FixLookup", "Learn how FixLookup checks dishwasher troubleshooting information"]],
+    ["/en/safety/", ["Dishwasher troubleshooting safety | FixLookup", "See which dishwasher checks you can do safely"]],
+    ["/en/contact/", ["Corrections and contact | FixLookup", "check when the correction contact channel becomes available"]],
+  ]);
+
+  for (const [path, [expectedTitle, descriptionFragment]] of expected) {
+    const html = await expectPage(path, []);
+    const title = html.match(/<title>(.*?)<\/title>/)?.[1];
+    const description = html.match(/<meta name="description" content="([^"]+)"/i)?.[1];
+    const socialTitle = html.match(/<meta property="og:title" content="([^"]+)"/i)?.[1];
+    const socialDescription = html.match(/<meta property="og:description" content="([^"]+)"/i)?.[1];
+    assert.equal(title, expectedTitle);
+    assert.ok(description?.includes(descriptionFragment), `${path} should explain the click outcome`);
+    assert.equal(socialTitle, title);
+    assert.equal(socialDescription, description);
+    assert.ok((title?.length ?? Infinity) <= 80, `${path} title is too long`);
+    assert.ok((description?.length ?? Infinity) <= 170, `${path} description is too long`);
+    assert.doesNotMatch(description ?? "", /applicability boundary|claim-level|evidence-checked|model relationships|record for/i);
+  }
 });
 
 test("breadcrumbs expose visible and machine-readable canonical hierarchies", async () => {
@@ -462,8 +499,15 @@ test("manifest and generated application icons use production brand metadata", a
   const manifest = await response.json();
   assert.equal(manifest.name, "FixLookup");
   assert.equal(manifest.short_name, "FixLookup");
+  assert.match(manifest.description, /dishwasher error codes, exact models, and common symptoms/i);
   assert.equal(manifest.start_url, "/en/");
   assert.deepEqual(manifest.icons.map((icon) => icon.src), ["/icon", "/apple-icon"]);
+
+  const homepage = await expectPage("/en/", []);
+  assert.match(homepage, /<link(?=[^>]*rel="icon")(?=[^>]*href="\/icon")(?=[^>]*sizes="512x512")(?=[^>]*type="image\/png")[^>]*>/);
+  assert.match(homepage, /<link(?=[^>]*rel="apple-touch-icon")(?=[^>]*href="\/apple-icon")(?=[^>]*sizes="180x180")(?=[^>]*type="image\/png")[^>]*>/);
+  assert.equal((homepage.match(/<link(?=[^>]*rel="icon")(?=[^>]*href="\/icon")[^>]*>/g) ?? []).length, 1);
+  assert.equal((homepage.match(/<link(?=[^>]*rel="apple-touch-icon")(?=[^>]*href="\/apple-icon")[^>]*>/g) ?? []).length, 1);
 
   for (const path of ["/icon", "/apple-icon"]) {
     const icon = await render(path);
